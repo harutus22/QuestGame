@@ -1,5 +1,5 @@
 <resources>
-    <string name="google_api_key">AIzaSyDRo-EJpLwAdwWLIqLcptEIcrSTxkWH7Fk</string>
+    <string name="google_map_api_key">AIzaSyDMO1uHVf0nI0dNQI9Un69LD4tFNgMK26k</string>
     <string name="app_name">My Application</string>
     <string name="title_activity_maps">Map</string>
     <string name="play_button">Play</string>

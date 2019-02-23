@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "649497890121",
+    "firebase_url": "https://online-quest-game.firebaseio.com",
+    "project_id": "online-quest-game",
+    "storage_bucket": "online-quest-game.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:649497890121:android:2dbe3638a1b3dbdd",
+        "android_client_info": {
+          "package_name": "com.example.apple.QuestGame"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "649497890121-g6lj5l5rvg0uc4b0inuvh7947nl94q4g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYSqXlDXVdsl4zCx1u-zF1LcfBLjmHdrE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
