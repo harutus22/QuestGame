@@ -6,4 +6,9 @@
     <string name="statistics_button">Statistics</string>
     <string name="settings_button">Settings</string>
     <string name="exit_button">Exit</string>
+    <string name="sign_up">Sign Up</string>
+    <string name="sign_in">Sign In</string>
+    <string name="password">password</string>
+    <string name="email">email</string>
+    <string name="title_activity_login">LoginActivity</string>
 </resources>
