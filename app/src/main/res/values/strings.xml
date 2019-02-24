@@ -11,4 +11,10 @@
     <string name="password">password</string>
     <string name="email">email</string>
     <string name="title_activity_login">LoginActivity</string>
+
+    <string name="quests">Quests</string>
+    <string name="play">Play</string>
+    <string name="map">Map</string>
+    <string name="info">Info</string>
+    <string name="settings">Settings</string>
 </resources>
