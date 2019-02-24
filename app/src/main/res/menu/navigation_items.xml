@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/action_quests"
+        android:title="@string/quests"
+        android:icon="@drawable/ic_quests" />
+    <item android:id="@+id/action_map"
+        android:title="@string/map"
+        android:icon="@drawable/ic_map" />
+    <item android:id="@+id/action_play"
+        android:title="@string/play"
+        android:icon="@drawable/ic_camera" />
+    <item android:id="@+id/action_settings"
+        android:title="@string/settings"
+        android:icon="@drawable/ic_settings" />
+    <item android:id="@+id/action_info"
+        android:title="@string/info"
+        android:icon="@drawable/ic_information" />
+</menu>
