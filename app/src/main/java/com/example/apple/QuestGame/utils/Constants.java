@@ -9,4 +9,5 @@ public class Constants {
     public static final int LOCATION_REQUEST_CODE = 200;
     public static final int ENABLE_GPS_CODE = 201;
     public static final int ERROR_DIALOG_REQUEST = 401;
+    public static final int IMAGE_REQUEST = 11;
 }

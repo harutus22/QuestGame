@@ -11,10 +11,13 @@
     <string name="password">password</string>
     <string name="email">email</string>
     <string name="title_activity_login">LoginActivity</string>
+    <string name="facebook_app_id">383497312234238</string> <string name="fb_login_protocol_scheme">fb383497312234238</string>
+
 
     <string name="quests">Quests</string>
     <string name="play">Play</string>
     <string name="map">Map</string>
     <string name="info">Info</string>
     <string name="settings">Settings</string>
+    <string name="logout">Logout</string>
 </resources>
