@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "649497890121-vgqksbnp4fprrtbg4h7bmo1g2u3hibtt.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.apple.QuestGame",
+            "certificate_hash": "fc98813c3559ecb1a28d5625fa889ca15b366042"
+          }
+        },
+        {
           "client_id": "649497890121-g6lj5l5rvg0uc4b0inuvh7947nl94q4g.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +37,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "649497890121-j2jsu19ldgt7q4orol4uj54bulv4n96v.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2
