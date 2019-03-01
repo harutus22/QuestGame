@@ -20,8 +20,13 @@ import android.widget.Toast;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.utils.Constants;
 import com.facebook.login.LoginManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -34,6 +39,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
+    private GoogleSignInClient mGoogleSignInClient;
+    private boolean mIsLoggedIn;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             }
         });
     }
+
 
     private void init(){
         mBottomNavigationView = findViewById(R.id.bottom_navigation_view);
@@ -80,8 +89,34 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.logOut:{
-                FirebaseAuth.getInstance().signOut();
-                LoginManager.getInstance().logOut();
+                String check = getIntent().getStringExtra("check");
+                if(check.equals("Face")) {
+
+                    FirebaseAuth.getInstance().signOut();
+                    LoginManager.getInstance().logOut();
+                } else if(check.equals("Google")){
+                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                            .requestIdToken(getString(R.string.google_id_client))
+                            .requestEmail()
+                            .build();
+
+                    mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+//                    mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Void> task) {
+//                            FirebaseAuth.getInstance().signOut();
+//                            LoginManager.getInstance().logOut();
+//                        }
+//                    });
+                    mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            FirebaseAuth.getInstance().signOut();
+                        }
+                    });
+                } else if (check.equals("Auth")){
+                    FirebaseAuth.getInstance().signOut();
+                }
                 finish();
             }
         }
@@ -156,5 +191,18 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         } else {
             Toast.makeText(this, "Upload completed", Toast.LENGTH_LONG).show();
         }
+    }
+
+
+    public void setmGoogleSignInClient(GoogleSignInClient mGoogleSignInClient) {
+        this.mGoogleSignInClient = mGoogleSignInClient;
+    }
+
+    public void setmIsLoggedIn(boolean mIsLoggedIn) {
+        this.mIsLoggedIn = mIsLoggedIn;
+    }
+
+    public void setmAuth(FirebaseAuth mAuth) {
+        this.mAuth = mAuth;
     }
 }

@@ -8,6 +8,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
@@ -47,13 +48,18 @@ public class LoginActivity extends AppCompatActivity {
     private CallbackManager mCallbackManager;
     private boolean mIsLoggedIn;
     private GoogleSignInClient mGoogleSignInClient;
+    private MainActivity mMainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+
+
         mAuth = FirebaseAuth.getInstance();
+
+        mMainActivity = new MainActivity();
 
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         mIsLoggedIn = accessToken != null && !accessToken.isExpired();
@@ -62,9 +68,8 @@ public class LoginActivity extends AppCompatActivity {
         initButtons();
 
 
-        if (mAuth.getCurrentUser() != null || mIsLoggedIn || googleSignInCheck()) {
-            logIn();
-        }
+        checkIfLogedIn();
+
         mBtnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,6 +91,18 @@ public class LoginActivity extends AppCompatActivity {
         facebookLogin();
     }
 
+    private void checkIfLogedIn() {
+        if (mIsLoggedIn) {
+            logIn("Face");
+            mMainActivity.setmIsLoggedIn(mIsLoggedIn);
+        } else if(googleSignInCheck()){
+            logIn("Google");
+        } else if(mAuth.getCurrentUser() != null){
+            logIn("Auth");
+        }
+        mMainActivity.setmAuth(mAuth);
+    }
+
     private boolean googleSignInCheck() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         return account != null;
@@ -103,6 +120,7 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+        mMainActivity.setmGoogleSignInClient(mGoogleSignInClient);
     }
 
     private void facebookLogin() {
@@ -123,9 +141,12 @@ public class LoginActivity extends AppCompatActivity {
     }
 
 
-    private void logIn() {
-        Intent intent = new Intent(this, MainActivity.class);
+    private void logIn(String string) {
+
+        Intent intent = new Intent(this, mMainActivity.getClass());
+        intent.putExtra("check", string);
         startActivity(intent);
+        setGooglePlusButtonText("Sign in");
     }
 
     private void signIn() {
@@ -135,7 +156,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                logIn();
+                                logIn("Auth");
                             } else {
                                 Toast.makeText(LoginActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
@@ -152,7 +173,7 @@ public class LoginActivity extends AppCompatActivity {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
-                                logIn();
+                                logIn("Auth");
                             } else {
                                 Toast.makeText(LoginActivity.this, "Authentication failed.",
                                         Toast.LENGTH_SHORT).show();
@@ -173,6 +194,7 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     GoogleSignInAccount account = task.getResult(ApiException.class);
                     firebaseAuthWithGoogle(account);
+                    setGooglePlusButtonText("Sign out");
                 } catch (ApiException e) {
                     Toast.makeText(LoginActivity.this, "Authentication failed3.",
                             Toast.LENGTH_SHORT).show();
@@ -189,7 +211,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            logIn();
+                            logIn("Face");
                         } else {
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
@@ -224,12 +246,23 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            logIn();
+                            logIn("Google");
                         } else {
                             Toast.makeText(LoginActivity.this, "Autintification failed 2", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
+    }
+
+    protected void setGooglePlusButtonText(String text) {
+        for (int i = 0; i < mGoogleSignInButton.getChildCount(); i++) {
+            View v = mGoogleSignInButton.getChildAt(i);
+            if (v instanceof TextView) {
+                TextView tv = (TextView) v;
+                tv.setText(text);
+                return;
+            }
+        }
     }
 
 }
