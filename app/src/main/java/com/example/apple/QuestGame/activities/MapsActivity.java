@@ -7,8 +7,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -20,19 +18,20 @@ import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.models.Marker;
 import com.example.apple.QuestGame.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.maps.android.SphericalUtil;
+import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -40,8 +39,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private boolean mapType = false;
     private boolean locationPermission = false;
-
-
+    private ClusterManager<Marker> mClusterManager;
+    private MarkerOptions markerOptions;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,6 +73,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(aca));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(13));
         setMyLocation();
+        setUpClusterer();
     }
 
     private void setMyLocation() {
@@ -188,6 +188,76 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getQuests() {
+    }
+
+    // Declare a variable for the cluster manager.
+
+    private void setUpClusterer() {
+        // Position the map.
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.198887912292537, 44.490739703178408), 10));
+
+        // Initialize the manager with the context and the map.
+        // (Activity extends context, so we can pass 'this' in the constructor.)
+        mClusterManager = new ClusterManager<>(this, mMap);
+
+        // Point the map's listeners at the listeners implemented by the cluster
+        // manager.
+        mMap.setOnCameraIdleListener(mClusterManager);
+        mMap.setOnMarkerClickListener(mClusterManager);
+
+        // Add cluster items (markers) to the cluster manager.
+        addItems();
+    }
+
+    private void addItems() {
+
+        // Set some lat/lng coordinates to start with.
+        double lat = 40.198887912292537;
+        double lng = 44.490739703178408;
+
+//        DefaultClusterRenderer
+
+        // Add ten cluster items in close proximity, for purposes of this example.
+        for (int i = 0; i < 10; i++) {
+            double offset = i / 60d;
+            lat = lat + offset;
+            lng = lng + offset;
+            Marker offsetItem = new Marker(lat, lng);
+            mClusterManager.addItem(offsetItem);
+
+        }
+    }
+
+    private void questBounds(){
+//        limit of area that you can move camera
+        final LatLngBounds ADELAIDE = new LatLngBounds(
+                new LatLng(-35.0, 138.58), new LatLng(-34.9, 138.61));
+
+// Constrain the camera target to the Adelaide bounds.
+        mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
+    }
+
+    private void showMarkersNearby(){
+        // show markers no near than 100 metres
+        com.google.android.gms.maps.model.Marker locationMarker;
+        markerOptions.visible(false);// We dont need to show, if its less than 100 meter we can show, otherwise we will just create and we will make it visble or not later
+        locationMarker = mMap.addMarker(markerOptions);
+
+        LatLng yourLatLang = new LatLng(40.198887912292537, 44.490739703178408);
+        double lat = 40.198887912292537;
+        double lng = 44.490739703178408;
+
+        for (int i = 0; i < 10; i++) {
+            double offset = i / 60d;
+            lat = lat + offset;
+            lng = lng + offset;
+            Marker offsetItem = new Marker(lat, lng);
+            mClusterManager.addItem(offsetItem);
+
+        }
+        if (SphericalUtil.computeDistanceBetween(yourLatLang, locationMarker.getPosition()) < 100) {
+            locationMarker.setVisible(true);
+        }
     }
 }
 

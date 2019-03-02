@@ -7,9 +7,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -28,6 +30,17 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.ChildEventListener;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.OnDisconnect;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -38,10 +51,12 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
+    private DatabaseReference mDatabase;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean mIsLoggedIn;
     private FirebaseAuth mAuth;
+    private boolean conected;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +71,14 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 setUserImage();
             }
         });
+
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+    }
 
     private void init(){
         mBottomNavigationView = findViewById(R.id.bottom_navigation_view);
@@ -87,14 +108,23 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        String check = "";
         switch (item.getItemId()){
             case R.id.logOut:{
-                String check = getIntent().getStringExtra("check");
-                if(check.equals("Face")) {
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    for (UserInfo profile : user.getProviderData()) {
+                        check = profile.getProviderId();
+                        Toast.makeText(this, check, Toast.LENGTH_LONG).show();
+                    }
+                }
+
+
+                if(check.equals("facebook.com")) {
 
                     FirebaseAuth.getInstance().signOut();
                     LoginManager.getInstance().logOut();
-                } else if(check.equals("Google")){
+                } else if(check.equals("google.com")){
                     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                             .requestIdToken(getString(R.string.google_id_client))
                             .requestEmail()
@@ -114,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                             FirebaseAuth.getInstance().signOut();
                         }
                     });
-                } else if (check.equals("Auth")){
+                } else if (check.equals("password")){
                     FirebaseAuth.getInstance().signOut();
                 }
                 finish();
@@ -204,5 +234,261 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     public void setmAuth(FirebaseAuth mAuth) {
         this.mAuth = mAuth;
+    }
+
+    private void getUserInfo(){
+        //TODO use to get user info
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            // Name, email address, and profile photo Url
+            String name = user.getDisplayName();
+            String email = user.getEmail();
+            Uri photoUrl = user.getPhotoUrl();
+
+            // Check if user's email is verified
+            boolean emailVerified = user.isEmailVerified();
+
+            // The user's ID, unique to the Firebase project. Do NOT use this value to
+            // authenticate with your backend server, if you have one. Use
+            // FirebaseUser.getIdToken() instead.
+            String uid = user.getUid();
+
+            //TODO update user
+
+            FirebaseUser user1 = FirebaseAuth.getInstance().getCurrentUser();
+
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setDisplayName("Jane Q. User")
+                    .setPhotoUri(Uri.parse("https://example.com/jane-q-user/profile.jpg"))
+                    .build();
+
+            user.updateProfile(profileUpdates)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("what", "User profile updated.");
+                            }
+                        }
+                    });
+
+            //Email update
+
+            user.updateEmail("user@example.com")
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("Email", "User email address updated.");
+                            }
+                        }
+                    });
+
+            // sent verification Email
+            FirebaseAuth auth = FirebaseAuth.getInstance();
+            FirebaseUser user3 = auth.getCurrentUser();
+
+            user3.sendEmailVerification()
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("ga", "Email sent.");
+                            }
+                        }
+                    });
+
+            //set Password
+            FirebaseUser user4 = FirebaseAuth.getInstance().getCurrentUser();
+            String newPassword = "SOME-SECURE-PASSWORD";
+
+            user4.updatePassword(newPassword)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("password", "User password updated.");
+                            }
+                        }
+                    });
+        }
+    }
+
+    // Read from database when changed
+    private void checkDatabase(){
+        ValueEventListener postListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                // Get Post object and use the values to update the UI
+//                Post post = dataSnapshot.getValue(Post.class);
+                // ...
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Getting Post failed, log a message
+                Log.w("dataChanged", "loadPost:onCancelled", databaseError.toException());
+                // ...
+            }
+        };
+        mDatabase.addValueEventListener(postListener);
+//        mDatabase.addListenerForSingleValueEvent();
+    }
+
+//    update data
+private void writeNewPost(String userId, String username, String title, String body) {
+    // Create new post at /user-posts/$userid/$postid and at
+    // /posts/$postid simultaneously
+//    String key = mDatabase.child("posts").push().getKey();
+//    Post post = new Post(userId, username, title, body);
+//    Map<String, Object> postValues = post.toMap();
+//
+//    Map<String, Object> childUpdates = new HashMap<>();
+//    childUpdates.put("/posts/" + key, postValues);
+//    childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
+//
+//    mDatabase.updateChildren(childUpdates);
+
+
+}
+
+//order firebase databse
+    private void orderTop(){
+        Query myMostViewedPostsQuery = mDatabase.child("posts").orderByChild("metrics/views");
+        myMostViewedPostsQuery.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+            // TODO: implement the ChildEventListener methods as documented above
+            // ...
+        });
+
+        //limit list
+//        Query recentPostsQuery = databaseReference.child("posts").limitToFirst(100);
+
+//        For example, this code queries for the last four items in a Firebase Realtime Database of scores
+
+        DatabaseReference scoresRef = FirebaseDatabase.getInstance().getReference("scores");
+        scoresRef.orderByValue().limitToLast(4).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChild) {
+                Log.d("jhk", "The " + snapshot.getKey() + " dinosaur's score is " + snapshot.getValue());
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+
+            // ...
+        });
+
+        scoresRef.orderByValue().limitToLast(2).addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(@NonNull DataSnapshot snapshot, String previousChild) {
+                Log.d("", "The " + snapshot.getKey() + " dinosaur's score is " + snapshot.getValue());
+            }
+
+            @Override
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+
+            @Override
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) { }
+
+        });
+    }
+
+    //if client is disconected
+    private void disconected(){
+        DatabaseReference presenceRef = FirebaseDatabase.getInstance().getReference("disconnectmessage");
+// Write a string when this client loses connection
+        presenceRef.onDisconnect().setValue("I disconnected!");
+
+        // to check if disconect is attached
+
+        presenceRef.onDisconnect().removeValue(new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError error, @NonNull DatabaseReference reference) {
+                if (error != null) {
+                    Log.d("", "could not establish onDisconnect event:" + error.getMessage());
+                }
+            }
+        });
+
+        // change that i disconected
+        OnDisconnect onDisconnectRef = presenceRef.onDisconnect();
+        onDisconnectRef.setValue("I disconnected");
+// ...
+// some time later when we change our minds
+// ...
+        onDisconnectRef.cancel();
+    }
+
+    private boolean checkConnection(){
+        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                if (connected) {
+                    Log.d("", "connected");
+                    con(true);
+                } else {
+                    Log.d("", "not connected");
+                    con(false);
+                }
+            }
+
+            private void con(boolean connection){
+                conected = connection;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("", "Listener was cancelled");
+                con(false);
+            }
+        });
+        return conected;
+    }
+
+    private void timeCheck(){
+        DatabaseReference offsetRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset");
+        offsetRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                double offset = snapshot.getValue(Double.class);
+                double estimatedServerTimeMs = System.currentTimeMillis() + offset;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("", "Listener was cancelled");
+            }
+        });
     }
 }

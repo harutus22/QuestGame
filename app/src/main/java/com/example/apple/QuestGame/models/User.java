@@ -1,18 +1,30 @@
 package com.example.apple.QuestGame.models;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class User {
     private String avatar;
     private String full_name;
     private String user_name;
     private String user_id;
+    private Map<String, Quest> quests;
+    private int points;
+    private String mail;
 
     public User(){
     }
 
-    public User(String avatar, String full_name, String user_name, String user_id) {
+    public User(String avatar, String full_name, String user_name, String user_id, String mail) {
         this.full_name = full_name;
         this.user_name = user_name;
         this.user_id = user_id;
+        this.avatar = avatar;
+        this.mail = mail;
+        points = 0;
+        quests = new HashMap<>();
     }
 
     public String getAvatar() {
@@ -46,4 +58,16 @@ public class User {
     public void setUser_id(String user_id) {
         this.user_id = user_id;
     }
+
+    public Map<String, Quest> getQuests() { return quests; }
+
+    public void setQuests(Map<String, Quest> quests) { this.quests = quests; }
+
+    public int getPoints() { return points; }
+
+    public void setPoints(int points) { this.points = points; }
+
+    public String getMail() { return mail; }
+
+    public void setMail(String mail) { this.mail = mail; }
 }
