@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.models.Marker;
+import com.example.apple.QuestGame.utils.ClusterRenderer;
 import com.example.apple.QuestGame.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -31,7 +32,6 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.clustering.ClusterManager;
-import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -41,6 +41,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean locationPermission = false;
     private ClusterManager<Marker> mClusterManager;
     private MarkerOptions markerOptions;
+    private ClusterRenderer mClusterRenderer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.moveCamera(CameraUpdateFactory.newLatLng(aca));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(13));
         setMyLocation();
-        setUpClusterer();
+        setUpCluster();
     }
 
     private void setMyLocation() {
@@ -192,7 +193,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // Declare a variable for the cluster manager.
 
-    private void setUpClusterer() {
+    private void setUpCluster() {
         // Position the map.
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.198887912292537, 44.490739703178408), 10));
 
@@ -217,15 +218,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 //        DefaultClusterRenderer
 
+        mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
+        mClusterManager.setRenderer(mClusterRenderer);
         // Add ten cluster items in close proximity, for purposes of this example.
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 25; i++) {
             double offset = i / 60d;
             lat = lat + offset;
             lng = lng + offset;
-            Marker offsetItem = new Marker(lat, lng);
+            int avatar = R.drawable.coin;
+            Marker offsetItem = new Marker(lat, lng, "title" + lat, "snippet" + lng, avatar);
+
             mClusterManager.addItem(offsetItem);
 
+
         }
+        mClusterManager.cluster();
     }
 
     private void questBounds(){
