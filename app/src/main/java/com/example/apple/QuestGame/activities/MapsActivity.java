@@ -31,7 +31,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.SphericalUtil;
+import com.google.maps.android.clustering.Cluster;
+import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
+import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -43,6 +47,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private MarkerOptions markerOptions;
     private ClusterRenderer mClusterRenderer;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,6 +55,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getLocationPermission();
         initMap();
     }
+
 
 
     private void initMap() {
@@ -75,6 +81,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.animateCamera(CameraUpdateFactory.zoomTo(13));
         setMyLocation();
         setUpCluster();
+        onClusterClick();
     }
 
     private void setMyLocation() {
@@ -200,7 +207,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<>(this, mMap);
-
+        mClusterManager.setAlgorithm((new PreCachingAlgorithmDecorator<Marker>(new GridBasedAlgorithm<Marker>())));
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
@@ -209,6 +216,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Add cluster items (markers) to the cluster manager.
         addItems();
     }
+
+
 
     private void addItems() {
 
@@ -220,8 +229,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
         mClusterManager.setRenderer(mClusterRenderer);
+
         // Add ten cluster items in close proximity, for purposes of this example.
-        for (int i = 0; i < 25; i++) {
+        for (int i = 0; i < 100; i++) {
             double offset = i / 60d;
             lat = lat + offset;
             lng = lng + offset;
@@ -229,10 +239,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Marker offsetItem = new Marker(lat, lng, "title" + lat, "snippet" + lng, avatar);
 
             mClusterManager.addItem(offsetItem);
-
-
         }
         mClusterManager.cluster();
+
     }
 
     private void questBounds(){
@@ -247,7 +256,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private void showMarkersNearby(){
         // show markers no near than 100 metres
         com.google.android.gms.maps.model.Marker locationMarker;
-        markerOptions.visible(false);// We dont need to show, if its less than 100 meter we can show, otherwise we will just create and we will make it visble or not later
+        markerOptions.visible(false);
+        // We dont need to show, if its less than 100 meter we can show, otherwise we will just create and we will make it visble or not later
         locationMarker = mMap.addMarker(markerOptions);
 
         LatLng yourLatLang = new LatLng(40.198887912292537, 44.490739703178408);
@@ -266,5 +276,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             locationMarker.setVisible(true);
         }
     }
+
+    private void onClusterClick(){
+        mClusterManager.setOnClusterItemClickListener(
+                new ClusterManager.OnClusterItemClickListener<Marker>() {
+                    @Override public boolean onClusterItemClick(Marker clusterItem) {
+
+                        Toast.makeText(MapsActivity.this, "Cluster item click", Toast.LENGTH_SHORT).show();
+                        mClusterManager.removeItem(clusterItem);
+                        mClusterManager.cluster();
+                        // if true, click handling stops here and do not show info view, do not move camera
+                        // you can avoid this by calling:
+                        // renderer.getMarker(clusterItem).showInfoWindow();
+
+                        return false;
+                    }
+                });
+    }
+
+
 }
 

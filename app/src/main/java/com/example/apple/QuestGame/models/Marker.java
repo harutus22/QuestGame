@@ -3,7 +3,7 @@ package com.example.apple.QuestGame.models;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
-public class Marker implements ClusterItem {
+public class Marker implements ClusterItem{
     private LatLng mPosition;
     private String mTitle;
     private String mSnippet;

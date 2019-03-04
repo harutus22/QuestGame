@@ -60,4 +60,6 @@ public class Quest {
     public void setEndTime(long endTime) {
         this.endTime = endTime;
     }
+
+
 }

@@ -12,7 +12,6 @@ import com.example.apple.QuestGame.models.Marker;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 import com.google.maps.android.ui.IconGenerator;
@@ -32,8 +31,6 @@ public class ClusterRenderer extends DefaultClusterRenderer<Marker> {
         markerWidth = (int) context.getResources().getDimension(R.dimen.custom_marker_image);
         markerHeight = (int) context.getResources().getDimension(R.dimen.custom_marker_image);
         imageView.setLayoutParams(new ViewGroup.LayoutParams(markerWidth, markerHeight));
-//        int padding = (int)context.getResources().getDimension(R.dimen.marker_image_padding);
-//        imageView.setPadding(padding, padding, padding, padding);
         iconGenerator.setContentView(imageView);
         Drawable draw = ContextCompat.getDrawable(context.getApplicationContext(), R.drawable.circle_shape);
         iconGenerator.setBackground(draw);
@@ -45,5 +42,7 @@ public class ClusterRenderer extends DefaultClusterRenderer<Marker> {
         Bitmap icon = iconGenerator.makeIcon();
         markerOptions.icon(BitmapDescriptorFactory.fromBitmap(icon)).title(item.getTitle());
     }
+
+
 
 }
