@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -15,9 +17,12 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.models.ClusterInfoViewAdapter;
 import com.example.apple.QuestGame.models.Marker;
 import com.example.apple.QuestGame.utils.ClusterRenderer;
 import com.example.apple.QuestGame.utils.Constants;
@@ -31,8 +36,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.SphericalUtil;
-import com.google.maps.android.clustering.Cluster;
-import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.GridBasedAlgorithm;
 import com.google.maps.android.clustering.algo.PreCachingAlgorithmDecorator;
@@ -46,16 +49,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ClusterManager<Marker> mClusterManager;
     private MarkerOptions markerOptions;
     private ClusterRenderer mClusterRenderer;
+    private LocationManager mLocationManager;
+    private LocationListener mListener;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         getLocationPermission();
         initMap();
     }
-
 
 
     private void initMap() {
@@ -69,7 +74,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        if(mapType){
+        if (mapType) {
             mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
         } else {
             mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
@@ -79,17 +84,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(aca).title("Marker in ACA"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(aca));
         mMap.animateCamera(CameraUpdateFactory.zoomTo(13));
-        setMyLocation();
+//        setMyLocation();
         setUpCluster();
         onClusterClick();
+
     }
 
-    private void setMyLocation() {
+    private void setMyLocation(final Marker marker ) {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
+        mListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                if (SphericalUtil.computeDistanceBetween(latLng, marker.getPosition()) < 100) {
+                    mClusterManager.addItem(marker);
+                    mClusterManager.cluster();
+                    Log.d("location", "100m");
+                }
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+        mLocationManager.requestLocationUpdates("gps", 5000, 0, mListener);
         mMap.setMyLocationEnabled(true);
     }
 
@@ -97,8 +130,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         getQuests();
-        if(checkMapServices()){
-            if(locationPermission){
+        if (checkMapServices()) {
+            if (locationPermission) {
                 getQuests();
             } else {
                 getLocationPermission();
@@ -107,7 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void getLocationPermission() {
-        if (ContextCompat.checkSelfPermission(getApplicationContext(), Constants.FINE_LOCATION) ==
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             locationPermission = true;
             getQuests();
@@ -186,9 +219,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private boolean checkMapServices(){
-        if(isService()){
-            if(isMapEnabled()){
+    private boolean checkMapServices() {
+        if (isService()) {
+            if (isMapEnabled()) {
                 return true;
             }
         }
@@ -206,8 +239,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<>(this, mMap);
-        mClusterManager.setAlgorithm((new PreCachingAlgorithmDecorator<Marker>(new GridBasedAlgorithm<Marker>())));
+        if (mClusterManager == null) {
+            mClusterManager = new ClusterManager<>(this, mMap);
+            mClusterManager.setAlgorithm((new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<Marker>())));
+        }
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
@@ -215,8 +250,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Add cluster items (markers) to the cluster manager.
         addItems();
-    }
 
+    }
 
 
     private void addItems() {
@@ -224,27 +259,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Set some lat/lng coordinates to start with.
         double lat = 40.198887912292537;
         double lng = 44.490739703178408;
-
+        int avatar = R.drawable.coin;
 //        DefaultClusterRenderer
-
-        mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
-        mClusterManager.setRenderer(mClusterRenderer);
+        if (mClusterRenderer == null) {
+            mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
+            mClusterManager.setRenderer(mClusterRenderer);
+        }
 
         // Add ten cluster items in close proximity, for purposes of this example.
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 10; i++) {
+            Marker offsetItem = new Marker(lat, lng, "title" + lat, "snippet" + lng, avatar);
             double offset = i / 60d;
             lat = lat + offset;
             lng = lng + offset;
-            int avatar = R.drawable.coin;
-            Marker offsetItem = new Marker(lat, lng, "title" + lat, "snippet" + lng, avatar);
-
-            mClusterManager.addItem(offsetItem);
+            setMyLocation(offsetItem);
         }
-        mClusterManager.cluster();
-
+        Marker marker = new Marker(40.201499, 44.496076, "kangar", "de hima", avatar);
+        setMyLocation(marker);
     }
 
-    private void questBounds(){
+    private void questBounds() {
 //        limit of area that you can move camera
         final LatLngBounds ADELAIDE = new LatLngBounds(
                 new LatLng(-35.0, 138.58), new LatLng(-34.9, 138.61));
@@ -253,7 +287,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
     }
 
-    private void showMarkersNearby(){
+    private void showMarkersNearby() {
         // show markers no near than 100 metres
         com.google.android.gms.maps.model.Marker locationMarker;
         markerOptions.visible(false);
@@ -277,10 +311,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void onClusterClick(){
+    private void onClusterClick() {
         mClusterManager.setOnClusterItemClickListener(
                 new ClusterManager.OnClusterItemClickListener<Marker>() {
-                    @Override public boolean onClusterItemClick(Marker clusterItem) {
+                    @Override
+                    public boolean onClusterItemClick(Marker clusterItem) {
 
                         Toast.makeText(MapsActivity.this, "Cluster item click", Toast.LENGTH_SHORT).show();
                         mClusterManager.removeItem(clusterItem);
@@ -294,6 +329,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
     }
 
+    private void setInfoWindow() {
+        // when cluster clicked opens window with short description
+        mClusterManager.getMarkerCollection()
+                .setOnInfoWindowAdapter(new ClusterInfoViewAdapter(LayoutInflater.from(this)));
+
+        mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
+    }
+
+    private void onClusterWindowClick() {
+        // if quest window clicked open more informative window
+        mClusterManager.setOnClusterItemInfoWindowClickListener(
+                new ClusterManager.OnClusterItemInfoWindowClickListener<Marker>() {
+                    @Override
+                    public void onClusterItemInfoWindowClick(Marker stringClusterItem) {
+                        Toast.makeText(MapsActivity.this, "Clicked info window: " + stringClusterItem.getTitle(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        mMap.setOnInfoWindowClickListener(mClusterManager);
+    }
 
 }
 
