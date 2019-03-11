@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.SignUpActivity"
+    tools:layout_editor_absoluteY="81dp">
+
+
+    <EditText
+        android:id="@+id/emailSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textEmailAddress"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:hint="@string/email"
+        android:layout_marginTop="90dp"
+        />
+
+    <EditText
+        android:id="@+id/passwordSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPassword"
+        android:hint="@string/password"
+        app:layout_constraintTop_toBottomOf="@id/emailSignUp"
+        app:layout_constraintStart_toStartOf="@id/emailSignUp"
+        android:layout_marginTop="40dp"/>
+
+    <EditText
+        android:id="@+id/birthdaySignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="date"
+        app:layout_constraintTop_toBottomOf="@id/passwordSignUp"
+        app:layout_constraintStart_toStartOf="@id/emailSignUp"
+        android:layout_marginTop="40dp"
+        android:hint="@string/date_of_birth"
+        />
+
+    <EditText
+        android:id="@+id/userNameSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text=""
+        android:hint="username"
+        app:layout_constraintTop_toBottomOf="@id/birthdaySignUp"
+        app:layout_constraintStart_toStartOf="@id/emailSignUp"
+        android:layout_marginTop="40dp"/>
+
+    <EditText
+        android:id="@+id/nameSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text=""
+        android:hint="@string/name"
+        app:layout_constraintTop_toBottomOf="@id/userNameSignUp"
+        app:layout_constraintStart_toStartOf="@id/emailSignUp"
+        android:layout_marginTop="40dp"/>
+
+    <EditText
+        android:id="@+id/surnameSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:text=""
+        android:hint="@string/surname"
+        app:layout_constraintTop_toBottomOf="@id/nameSignUp"
+        app:layout_constraintStart_toStartOf="@id/emailSignUp"
+        android:layout_marginTop="40dp"/>
+
+    <Button
+        android:id="@+id/finishSignUp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/ready"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/surnameSignUp" />
+
+</android.support.constraint.ConstraintLayout>
