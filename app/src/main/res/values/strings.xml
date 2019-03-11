@@ -22,4 +22,9 @@
     <string name="settings">Settings</string>
     <string name="logout">Logout</string>
     <string name="google_id_client">649497890121-s12alndenue5dcejutqnm26766ja45u7.apps.googleusercontent.com</string>
+    <string name="title_activity_sign_up">SignUpActivity</string>
+    <string name="date_of_birth">Birthday</string>
+    <string name="name">name</string>
+    <string name="surname">surname</string>
+    <string name="ready">Ready</string>
 </resources>

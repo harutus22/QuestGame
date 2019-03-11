@@ -17,9 +17,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.utils.Constants;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -32,7 +34,6 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -51,12 +52,17 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
-    private DatabaseReference mDatabase;
+    private DatabaseReference mRef;
+    private FirebaseDatabase mDatabase;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean mIsLoggedIn;
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private boolean conected;
+    private TextView mUsername;
+    private TextView mPoints;
+    private String userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,18 +77,20 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 setUserImage();
             }
         });
-
+    getUserInfo();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        mRef = FirebaseDatabase.getInstance().getReference();
     }
 
     private void init(){
         mBottomNavigationView = findViewById(R.id.bottom_navigation_view);
         mBottomNavigationView.setOnNavigationItemSelectedListener(this);
+        mUsername = findViewById(R.id.usernameMain);
+        mPoints = findViewById(R.id.pointsMain);
     }
 
     @Override
@@ -127,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 } else if(check.equals("google.com")){
                     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                             .requestIdToken(getString(R.string.google_id_client))
-                            .requestEmail()
+                            .requestEmail().requestId().requestProfile()
                             .build();
 
                     mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
@@ -224,26 +232,73 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     }
 
 
-    public void setmGoogleSignInClient(GoogleSignInClient mGoogleSignInClient) {
+    public void setGoogleSignInClient(GoogleSignInClient mGoogleSignInClient) {
         this.mGoogleSignInClient = mGoogleSignInClient;
     }
 
-    public void setmIsLoggedIn(boolean mIsLoggedIn) {
+    public void setIsLoggedIn(boolean mIsLoggedIn) {
         this.mIsLoggedIn = mIsLoggedIn;
     }
 
-    public void setmAuth(FirebaseAuth mAuth) {
+    public void setAuth(FirebaseAuth mAuth) {
         this.mAuth = mAuth;
     }
 
     private void getUserInfo(){
         //TODO use to get user info
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        mDatabase = FirebaseDatabase.getInstance();
+        mRef = mDatabase.getReference();
+        userId = user.getUid();
+        String check = "";
+        if (user != null) {
+            for (UserInfo profile : user.getProviderData()) {
+                check = profile.getProviderId();
+                Toast.makeText(this, check, Toast.LENGTH_LONG).show();
+            }
+        }
+        if(check.equals("password")) {
+            mRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                String email = dataSnapshot.child(userId).getValue(User.class).getMail();
+//                Uri photoUrl = user.getPhotoUrl();
+                    User user = new User();
+                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
+                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
+
+                    mUsername.setText(user.getFull_name());
+                    mPoints.setText(String.valueOf(user.getPoints()));
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                }
+            });
+        } else if (check.equals("google.com")){
+            for (UserInfo profile : user.getProviderData()) {
+                // Id of the provider (ex: google.com)
+                String providerId = profile.getProviderId();
+
+                // UID specific to the provider
+                String uid = profile.getUid();
+
+                // Name, email address, and profile photo Url
+                String name = profile.getDisplayName();
+                String email = profile.getEmail();
+                Uri photoUrl = profile.getPhotoUrl();
+
+                mUsername.setText(uid);
+                mPoints.setText(String.valueOf("0"));
+            }
+        }
+
         if (user != null) {
             // Name, email address, and profile photo Url
-            String name = user.getDisplayName();
-            String email = user.getEmail();
-            Uri photoUrl = user.getPhotoUrl();
+
+
+
 
             // Check if user's email is verified
             boolean emailVerified = user.isEmailVerified();
@@ -251,66 +306,66 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             // The user's ID, unique to the Firebase project. Do NOT use this value to
             // authenticate with your backend server, if you have one. Use
             // FirebaseUser.getIdToken() instead.
-            String uid = user.getUid();
+//            String uid = user.getUid();
 
-            //TODO update user
-
-            FirebaseUser user1 = FirebaseAuth.getInstance().getCurrentUser();
-
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setDisplayName("Jane Q. User")
-                    .setPhotoUri(Uri.parse("https://example.com/jane-q-user/profile.jpg"))
-                    .build();
-
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("what", "User profile updated.");
-                            }
-                        }
-                    });
-
-            //Email update
-
-            user.updateEmail("user@example.com")
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("Email", "User email address updated.");
-                            }
-                        }
-                    });
-
-            // sent verification Email
-            FirebaseAuth auth = FirebaseAuth.getInstance();
-            FirebaseUser user3 = auth.getCurrentUser();
-
-            user3.sendEmailVerification()
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("ga", "Email sent.");
-                            }
-                        }
-                    });
-
-            //set Password
-            FirebaseUser user4 = FirebaseAuth.getInstance().getCurrentUser();
-            String newPassword = "SOME-SECURE-PASSWORD";
-
-            user4.updatePassword(newPassword)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("password", "User password updated.");
-                            }
-                        }
-                    });
+//            //TODO update user
+//
+//            FirebaseUser user1 = FirebaseAuth.getInstance().getCurrentUser();
+//
+//            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+//                    .setDisplayName("Jane Q. User")
+//                    .setPhotoUri(Uri.parse("https://example.com/jane-q-user/profile.jpg"))
+//                    .build();
+//
+//            user.updateProfile(profileUpdates)
+//                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Void> task) {
+//                            if (task.isSuccessful()) {
+//                                Log.d("what", "User profile updated.");
+//                            }
+//                        }
+//                    });
+//
+//            //Email update
+//
+//            user.updateEmail("user@example.com")
+//                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Void> task) {
+//                            if (task.isSuccessful()) {
+//                                Log.d("Email", "User email address updated.");
+//                            }
+//                        }
+//                    });
+//
+//            // sent verification Email
+//            FirebaseAuth auth = FirebaseAuth.getInstance();
+//            FirebaseUser user3 = auth.getCurrentUser();
+//
+//            user3.sendEmailVerification()
+//                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Void> task) {
+//                            if (task.isSuccessful()) {
+//                                Log.d("ga", "Email sent.");
+//                            }
+//                        }
+//                    });
+//
+//            //set Password
+//            FirebaseUser user4 = FirebaseAuth.getInstance().getCurrentUser();
+//            String newPassword = "SOME-SECURE-PASSWORD";
+//
+//            user4.updatePassword(newPassword)
+//                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+//                        @Override
+//                        public void onComplete(@NonNull Task<Void> task) {
+//                            if (task.isSuccessful()) {
+//                                Log.d("password", "User password updated.");
+//                            }
+//                        }
+//                    });
         }
     }
 
@@ -331,30 +386,30 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 // ...
             }
         };
-        mDatabase.addValueEventListener(postListener);
-//        mDatabase.addListenerForSingleValueEvent();
+        mRef.addValueEventListener(postListener);
+//        mRef.addListenerForSingleValueEvent();
     }
 
 //    update data
 private void writeNewPost(String userId, String username, String title, String body) {
     // Create new post at /user-posts/$userid/$postid and at
     // /posts/$postid simultaneously
-//    String key = mDatabase.child("posts").push().getKey();
-//    Post post = new Post(userId, username, title, body);
+//    String key = mRef.child("posts").push().getKey();
+//    Post post = new Post(userId, mUsername, title, body);
 //    Map<String, Object> postValues = post.toMap();
 //
 //    Map<String, Object> childUpdates = new HashMap<>();
 //    childUpdates.put("/posts/" + key, postValues);
 //    childUpdates.put("/user-posts/" + userId + "/" + key, postValues);
 //
-//    mDatabase.updateChildren(childUpdates);
+//    mRef.updateChildren(childUpdates);
 
 
 }
 
 //order firebase databse
     private void orderTop(){
-        Query myMostViewedPostsQuery = mDatabase.child("posts").orderByChild("metrics/views");
+        Query myMostViewedPostsQuery = mRef.child("posts").orderByChild("metrics/views");
         myMostViewedPostsQuery.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
