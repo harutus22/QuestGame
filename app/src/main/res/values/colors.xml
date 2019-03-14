@@ -5,4 +5,7 @@
     <color name="colorAccent">#D81B60</color>
     <color name="buttonPressed">#FF0000 </color>
     <color name="buttonUnpressed">#00FF00 </color>
+    <color name="questBackColor"> #778899</color>
+    <color name="questBackColorPressed">#708090</color>
+    <color name="black"> #000000</color>
 </resources>

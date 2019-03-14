@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/group_of_markers"
+    android:layout_height="@dimen/group_of_markers">
+
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="@dimen/group_of_markers"
+        android:layout_height="@dimen/group_of_markers"/>
+
+    <TextView
+        android:id="@id/amu_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/amu_Bubble.TextAppearance.Light"
+        android:textColor="@color/black"
+        android:layout_gravity="center"
+        android:alpha=".8"/>
+
+</FrameLayout>

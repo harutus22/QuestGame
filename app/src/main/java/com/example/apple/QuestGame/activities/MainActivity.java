@@ -1,6 +1,7 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -21,7 +22,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.models.Quest;
 import com.example.apple.QuestGame.models.User;
+import com.example.apple.QuestGame.services.LocationService;
 import com.example.apple.QuestGame.utils.Constants;
 import com.facebook.login.LoginManager;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -53,13 +56,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private DatabaseReference mRef;
-    private FirebaseDatabase mDatabase;
+    private FirebaseAuth mAuth;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
-    private boolean mIsLoggedIn;
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private boolean conected;
+    private boolean connected;
     private TextView mUsername;
     private TextView mPoints;
     private String userId;
@@ -68,8 +68,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        storage = FirebaseStorage.getInstance();
+        startLocationService();
         init();
+        fireBaseInit();
         Button button = findViewById(R.id.button3);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,12 +78,11 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 setUserImage();
             }
         });
-    getUserInfo();
+        getUserInfo();
     }
 
-    @Override
-    protected void onStart() {
-        super.onStart();
+    private void fireBaseInit() {
+        storage = FirebaseStorage.getInstance();
         mRef = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -127,10 +127,8 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                     }
                 }
 
-
                 if(check.equals("facebook.com")) {
-
-                    FirebaseAuth.getInstance().signOut();
+                    signOut();
                     LoginManager.getInstance().logOut();
                 } else if(check.equals("google.com")){
                     GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
@@ -139,26 +137,23 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                             .build();
 
                     mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-//                    mGoogleSignInClient.signOut().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-//                        @Override
-//                        public void onComplete(@NonNull Task<Void> task) {
-//                            FirebaseAuth.getInstance().signOut();
-//                            LoginManager.getInstance().logOut();
-//                        }
-//                    });
                     mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
-                            FirebaseAuth.getInstance().signOut();
+                            signOut();
                         }
                     });
                 } else if (check.equals("password")){
-                    FirebaseAuth.getInstance().signOut();
+                    signOut();
                 }
                 finish();
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void signOut(){
+        FirebaseAuth.getInstance().signOut();
     }
 
 
@@ -231,24 +226,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
     }
 
-
-    public void setGoogleSignInClient(GoogleSignInClient mGoogleSignInClient) {
-        this.mGoogleSignInClient = mGoogleSignInClient;
-    }
-
-    public void setIsLoggedIn(boolean mIsLoggedIn) {
-        this.mIsLoggedIn = mIsLoggedIn;
-    }
-
-    public void setAuth(FirebaseAuth mAuth) {
-        this.mAuth = mAuth;
-    }
-
     private void getUserInfo(){
         //TODO use to get user info
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance();
-        mRef = mDatabase.getReference();
         userId = user.getUid();
         String check = "";
         if (user != null) {
@@ -257,18 +237,18 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 Toast.makeText(this, check, Toast.LENGTH_LONG).show();
             }
         }
-        if(check.equals("password")) {
+//        if(check.equals("password")) {
             mRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 //                String email = dataSnapshot.child(userId).getValue(User.class).getMail();
 //                Uri photoUrl = user.getPhotoUrl();
-                    User user = new User();
-                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
-                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
+//                    User user = new User();
+//                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
+//                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
 
-                    mUsername.setText(user.getFull_name());
-                    mPoints.setText(String.valueOf(user.getPoints()));
+                    mUsername.setText(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
+                    mPoints.setText(String.valueOf(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints()));
                 }
 
                 @Override
@@ -276,32 +256,32 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
                 }
             });
-        } else if (check.equals("google.com")){
-            for (UserInfo profile : user.getProviderData()) {
-                // Id of the provider (ex: google.com)
-                String providerId = profile.getProviderId();
-
-                // UID specific to the provider
-                String uid = profile.getUid();
-
-                // Name, email address, and profile photo Url
-                String name = profile.getDisplayName();
-                String email = profile.getEmail();
-                Uri photoUrl = profile.getPhotoUrl();
-
-                mUsername.setText(uid);
-                mPoints.setText(String.valueOf("0"));
-            }
-        }
-
-        if (user != null) {
-            // Name, email address, and profile photo Url
-
-
-
-
-            // Check if user's email is verified
-            boolean emailVerified = user.isEmailVerified();
+//        } else if (check.equals("google.com")){
+//            for (UserInfo profile : user.getProviderData()) {
+//                // Id of the provider (ex: google.com)
+//                String providerId = profile.getProviderId();
+//
+//                // UID specific to the provider
+//                String uid = profile.getUid();
+//
+//                // Name, email address, and profile photo Url
+//                String name = profile.getDisplayName();
+//                String email = profile.getEmail();
+//                Uri photoUrl = profile.getPhotoUrl();
+//
+//                mUsername.setText(uid);
+//                mPoints.setText(String.valueOf("0"));
+//            }
+//        }
+//
+//        if (user != null) {
+//            // Name, email address, and profile photo Url
+//
+//
+//
+//
+//            // Check if user's email is verified
+//            boolean emailVerified = user.isEmailVerified();
 
             // The user's ID, unique to the Firebase project. Do NOT use this value to
             // authenticate with your backend server, if you have one. Use
@@ -366,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 //                            }
 //                        }
 //                    });
-        }
+//        }
     }
 
     // Read from database when changed
@@ -496,7 +476,7 @@ private void writeNewPost(String userId, String username, String title, String b
 
         // change that i disconected
         OnDisconnect onDisconnectRef = presenceRef.onDisconnect();
-        onDisconnectRef.setValue("I disconnected");
+        onDisconnectRef.setValue("I am disconnected");
 // ...
 // some time later when we change our minds
 // ...
@@ -519,7 +499,7 @@ private void writeNewPost(String userId, String username, String title, String b
             }
 
             private void con(boolean connection){
-                conected = connection;
+                connected = connection;
             }
 
             @Override
@@ -528,7 +508,7 @@ private void writeNewPost(String userId, String username, String title, String b
                 con(false);
             }
         });
-        return conected;
+        return connected;
     }
 
     private void timeCheck(){
@@ -545,5 +525,31 @@ private void writeNewPost(String userId, String username, String title, String b
                 Log.w("", "Listener was cancelled");
             }
         });
+    }
+
+    private void startLocationService(){
+        if(!isLocationServiceRunning()){
+            Intent serviceIntent = new Intent(this, LocationService.class);
+//        this.startService(serviceIntent);
+
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+
+                MainActivity.this.startForegroundService(serviceIntent);
+            }else{
+                startService(serviceIntent);
+            }
+        }
+    }
+
+    private boolean isLocationServiceRunning() {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
+            if("com.codingwithmitch.googledirectionstest.services.LocationService".equals(service.service.getClassName())) {
+                Log.d("service", "isLocationServiceRunning: location service is already running.");
+                return true;
+            }
+        }
+        Log.d("service", "isLocationServiceRunning: location service is not running.");
+        return false;
     }
 }

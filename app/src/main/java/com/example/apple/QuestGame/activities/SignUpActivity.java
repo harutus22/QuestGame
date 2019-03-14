@@ -30,14 +30,11 @@ public class SignUpActivity extends AppCompatActivity {
     private EditText mName;
     private EditText mSurname;
     private Button ready;
-    private MainActivity mMainActivity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
-
-        mMainActivity = new MainActivity();
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -46,7 +43,6 @@ public class SignUpActivity extends AppCompatActivity {
         ready.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mMainActivity.setAuth(mAuth);
                 signUp();
             }
         });
@@ -77,7 +73,6 @@ public class SignUpActivity extends AppCompatActivity {
                                         mUsername.getText().toString(), mEmail.getText().toString());
                                 user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
-//                                mDatabase.child("users").setValue(user);
                                 logIn();
                             } else {
                                 Toast.makeText(SignUpActivity.this, "Authentication failed.",
@@ -100,7 +95,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void logIn() {
 
-        Intent intent = new Intent(this, mMainActivity.getClass());
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
 }

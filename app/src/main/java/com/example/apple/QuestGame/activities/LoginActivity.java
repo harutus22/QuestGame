@@ -13,11 +13,14 @@ import android.widget.Toast;
 
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.models.Quest;
+import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.utils.Constants;
 import com.facebook.AccessToken;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -34,32 +37,28 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GoogleAuthProvider;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 public class LoginActivity extends AppCompatActivity {
 
-    public static final String TAG = "what";
     private Button mBtnSignIn;
     private Button mBtnSignUp;
     private SignInButton mGoogleSignInButton;
     private LoginButton mFacebookLoginButton;
 
-    private DatabaseReference mDatabase;
     private FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
     private EditText mEmail;
     private EditText mPassword;
     private CallbackManager mCallbackManager;
     private boolean mIsLoggedIn;
     private GoogleSignInClient mGoogleSignInClient;
-    private MainActivity mMainActivity;
 
-    @Override
-    protected void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        //TODO if user logged in, login from this point
-    }
+    private final String authFailed = "Authentication failed";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,14 +67,12 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        mMainActivity = new MainActivity();
 
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         mIsLoggedIn = accessToken != null && !accessToken.isExpired();
 
         googleSignInConfigure();
         initButtons();
-
 
         checkIfLogedIn();
 
@@ -104,13 +101,17 @@ public class LoginActivity extends AppCompatActivity {
 
         if (mIsLoggedIn) {
             logIn();
-            mMainActivity.setIsLoggedIn(mIsLoggedIn);
         } else if(googleSignInCheck()){
             logIn();
         } else if(mAuth.getCurrentUser() != null){
             logIn();
         }
-        mMainActivity.setAuth(mAuth);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        setGooglePlusButtonText("Sign in");
     }
 
     private boolean googleSignInCheck() {
@@ -130,7 +131,6 @@ public class LoginActivity extends AppCompatActivity {
                 .build();
 
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-        mMainActivity.setGoogleSignInClient(mGoogleSignInClient);
     }
 
     private void facebookLogin() {
@@ -152,10 +152,8 @@ public class LoginActivity extends AppCompatActivity {
 
 
     private void logIn() {
-
-        Intent intent = new Intent(this, mMainActivity.getClass());
+        Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
-        setGooglePlusButtonText("Sign in");
     }
 
     private void signIn() {
@@ -167,7 +165,7 @@ public class LoginActivity extends AppCompatActivity {
                             if (task.isSuccessful()) {
                                 logIn();
                             } else {
-                                Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                Toast.makeText(LoginActivity.this, authFailed,
                                         Toast.LENGTH_SHORT).show();
                             }
                         }
@@ -191,11 +189,9 @@ public class LoginActivity extends AppCompatActivity {
                 try {
                     GoogleSignInAccount account = task.getResult(ApiException.class);
                     firebaseAuthWithGoogle(account);
-                    setGooglePlusButtonText("Sign out");
                 } catch (ApiException e) {
-                    Toast.makeText(LoginActivity.this, "Authentication failed3.",
+                    Toast.makeText(LoginActivity.this, authFailed,
                             Toast.LENGTH_SHORT).show();
-                    Log.w(TAG, "Google sign in failed", e);
                 }
         }
     }
@@ -208,18 +204,40 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            createUser(task);
                             logIn();
                         } else {
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
+                            Toast.makeText(LoginActivity.this, authFailed,
                                     Toast.LENGTH_SHORT).show();
+                            LoginManager.getInstance().logOut();
+                            FirebaseAuth.getInstance().signOut();
                         }
                     }
                 });
     }
 
+    private void createUser(final Task<AuthResult> task) {
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!dataSnapshot.child("users").child(mAuth.getUid()).exists()){
+                    User user = new User("", task.getResult().getUser().getDisplayName(),"User",
+                            task.getResult().getUser().getUid(), task.getResult().getUser().getEmail());
+                    user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
+                    mDatabase.child("users").child(mAuth.getUid()).setValue(user);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private boolean checkEditText() {
         if (mEmail.getText().toString().isEmpty() && mPassword.getText().toString().isEmpty()) {
-            Toast.makeText(this, "Pleas enter login and password", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Please enter login and password", Toast.LENGTH_LONG).show();
             return false;
         }
         return true;
@@ -243,9 +261,11 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
+                            setGooglePlusButtonText("Sign out");
+                            createUser(task);
                             logIn();
                         } else {
-                            Toast.makeText(LoginActivity.this, "Autintification failed 2", Toast.LENGTH_LONG).show();
+                            Toast.makeText(LoginActivity.this, authFailed, Toast.LENGTH_LONG).show();
                         }
                     }
                 });

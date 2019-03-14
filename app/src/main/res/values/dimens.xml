@@ -2,4 +2,18 @@
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="custom_marker_image">50dp</dimen>
     <dimen name="marker_image_padding">0dp</dimen>
+    <dimen name="quest_card_elev"> 5dp</dimen>
+    <dimen name="quest_card_padding"> 5dp</dimen>
+    <dimen name="quest_corner_radius"> 5dp</dimen>
+    <dimen name="quest_image_margin_start">5dp</dimen>
+    <dimen name="quest_image_margin_top">5dp</dimen>
+    <dimen name="quest_title_margin_start"> 10dp</dimen>
+    <dimen name="quest_title_margin_top"> 5dp</dimen>
+    <dimen name="quest_description_margin_start"> 10dp</dimen>
+    <dimen name="quest_description_margin_top"> 5dp</dimen>
+    <dimen name="quest_description_margin_end"> 10dp</dimen>
+    <dimen name="quest_button_margin_top"> 5dp</dimen>
+    <dimen name="quest_button_margin_end"> 5dp</dimen>
+    <dimen name="group_of_markers"> 50dp</dimen>
+
 </resources>

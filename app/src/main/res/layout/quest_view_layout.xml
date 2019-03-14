@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardElevation="@dimen/quest_card_elev"
+    app:cardUseCompatPadding="true"
+    app:contentPadding="@dimen/quest_card_padding"
+    app:cardBackgroundColor="@color/questBackColor"
+    app:cardCornerRadius="@dimen/quest_corner_radius"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/quest_view_selector"
+        tools:context=".activity.MainActivity">
+
+        <ImageView
+            android:id="@+id/questImage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/quest_image_margin_start"
+            android:layout_marginTop="@dimen/quest_image_margin_top"
+            android:visibility="visible"/>
+
+        <TextView
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/questTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:ellipsize="end"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/questImage"
+            android:layout_marginStart="@dimen/quest_title_margin_start"
+            android:layout_marginTop="@dimen/quest_title_margin_top"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/questDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="3"
+            android:ellipsize="end"
+            app:layout_constraintTop_toBottomOf="@id/questImage"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="@dimen/quest_description_margin_start"
+            android:layout_marginTop="@dimen/quest_description_margin_top"
+            android:layout_marginEnd="@dimen/quest_description_margin_end"/>
+
+        <Button
+            android:id="@+id/questStartButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text = "Start"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginEnd="@dimen/quest_button_margin_end"
+            android:layout_marginTop="@dimen/quest_button_margin_top"/>
+
+        <ImageView
+            android:id="@+id/questMinimize"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/arrow_up"
+            android:visibility="gone"/>
+
+
+
+    </android.support.constraint.ConstraintLayout>
+</android.support.v7.widget.CardView>

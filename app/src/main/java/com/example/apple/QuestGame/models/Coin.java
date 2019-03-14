@@ -9,9 +9,18 @@ public class Coin implements ClusterItem{
     private String snippet;
     private int iconPicture;
 
+    public Coin(){}
 
-    public Coin(double lat, double lng, String title, String snippet, int iconPicture) {
+
+    public Coin(double lat, double lng, String title, String snippet,int iconPicture) {
         this.position = new LatLng(lat, lng);
+        this.title = title;
+        this.snippet = snippet;
+        this.iconPicture = iconPicture;
+    }
+
+    public Coin(int iconPicture ,LatLng position, String snippet, String title) {
+        this.position = position;
         this.title = title;
         this.snippet = snippet;
         this.iconPicture = iconPicture;

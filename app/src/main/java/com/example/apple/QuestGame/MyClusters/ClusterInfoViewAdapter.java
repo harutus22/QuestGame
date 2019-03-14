@@ -1,4 +1,4 @@
-package com.example.apple.QuestGame.models;
+package com.example.apple.QuestGame.MyClusters;
 
 import android.view.LayoutInflater;
 import android.view.View;

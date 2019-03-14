@@ -1,7 +1,5 @@
 package com.example.apple.QuestGame.models;
 
-import java.util.List;
-
 public class Quest {
 
     private String name;
