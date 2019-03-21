@@ -1,4 +1,4 @@
-package com.example.apple.QuestGame.MyDrawable;
+package com.example.apple.QuestGame.my_drawable;
 
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
@@ -50,19 +50,24 @@ public class MultiDrawable extends Drawable {
             mDrawables.get(1).draw(canvas);
 
             // Paint bottom right
-            canvas.translate(0, height);
+            canvas.restore();
+            canvas.scale(.5f, .5f);
+            canvas.translate(width * .8f, height * .2f);
             mDrawables.get(2).draw(canvas);
             canvas.restore();
         }
-
+//
         if (mDrawables.size() >= 4) {
             // Paint top left
             canvas.save();
+            canvas.translate(width * .3f, height * .2f);
             canvas.scale(.5f, .5f);
             mDrawables.get(0).draw(canvas);
+            canvas.restore();
 
             // Paint bottom left
-            canvas.translate(0, height);
+            canvas.translate(width * .24f, height * .28f);
+            canvas.scale(.5f, .5f);
             mDrawables.get(3).draw(canvas);
             canvas.restore();
         }

@@ -8,6 +8,7 @@ public class Coin implements ClusterItem{
     private String title;
     private String snippet;
     private int iconPicture;
+    private boolean isCluster = false;
 
     public Coin(){}
 
@@ -64,4 +65,8 @@ public class Coin implements ClusterItem{
     public void setSnippet(String snippet) {
         this.snippet = snippet;
     }
+
+    public boolean isCluster() { return isCluster; }
+
+    public void setCluster(boolean cluster) { isCluster = cluster; }
 }

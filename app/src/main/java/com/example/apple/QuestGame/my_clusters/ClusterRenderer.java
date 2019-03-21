@@ -1,4 +1,4 @@
-package com.example.apple.QuestGame.MyClusters;
+package com.example.apple.QuestGame.my_clusters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.apple.QuestGame.MyDrawable.MultiDrawable;
+import com.example.apple.QuestGame.my_drawable.MultiDrawable;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.models.Coin;
 import com.google.android.gms.maps.GoogleMap;

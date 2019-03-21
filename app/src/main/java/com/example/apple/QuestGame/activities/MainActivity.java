@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        startLocationService();
         init();
         fireBaseInit();
         Button button = findViewById(R.id.button3);
@@ -102,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             {
                 Intent intent = new Intent(this,MapsActivity.class);
                 startActivity(intent);
+                startLocationService();
             }
         }
         return true;
@@ -533,7 +533,6 @@ private void writeNewPost(String userId, String username, String title, String b
 //        this.startService(serviceIntent);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
-
                 MainActivity.this.startForegroundService(serviceIntent);
             }else{
                 startService(serviceIntent);
@@ -552,4 +551,6 @@ private void writeNewPost(String userId, String username, String title, String b
         Log.d("service", "isLocationServiceRunning: location service is not running.");
         return false;
     }
+
+
 }
