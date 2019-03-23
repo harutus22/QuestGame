@@ -27,4 +27,5 @@
     <string name="name">name</string>
     <string name="surname">surname</string>
     <string name="ready">Ready</string>
+    <string name="don_t_have_an_account_n_sign_up">"Don\'t have an account? \n              Sign up"</string>
 </resources>

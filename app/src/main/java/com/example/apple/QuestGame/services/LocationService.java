@@ -124,8 +124,6 @@ public class LocationService extends IntentService {
                         if (location != null) {
                             Log.d("move",String.valueOf(latitude) + " " +
                                     String.valueOf(longitude));
-//                            locationViewModel.getCurrentName().setValue(new LatLng(latitude, longitude));
-//                            CoinsLiveDataProvider.mCoins.setValue(getArrayList(new LatLng(latitude, longitude)));
                         }
 
                     }

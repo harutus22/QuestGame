@@ -125,7 +125,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        mMap.addMarker(new MarkerOptions().position(aca).title("Coin in ACA"));
 //        mMap.moveCamera(CameraUpdateFactory.newLatLng(aca));
 //        mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         mMap.setMyLocationEnabled(true);
@@ -314,7 +316,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // (Activity extends context, so we can pass 'this' in the constructor.)
         if (mClusterManager == null) {
             mClusterManager = new ClusterManager<>(this, mMap);
-//            mClusterManager.setAlgorithm((new PreCachingAlgorithmDecorator<>(new GridBasedAlgorithm<Coin>())));
         }
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
@@ -324,7 +325,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (mClusterRenderer == null) {
             mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
             mClusterManager.setRenderer(mClusterRenderer);
-//            initilizeMap();
         }
     }
 

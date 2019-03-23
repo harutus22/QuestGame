@@ -1,10 +1,16 @@
 package com.example.apple.QuestGame.activities;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Base64;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -43,17 +49,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class LoginActivity extends AppCompatActivity {
 
     private Button mBtnSignIn;
-    private Button mBtnSignUp;
     private SignInButton mGoogleSignInButton;
     private LoginButton mFacebookLoginButton;
+    private TextView mSignUp;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
-    private EditText mEmail;
-    private EditText mPassword;
+    private TextInputLayout mEmail;
+    private TextInputLayout mPassword;
     private CallbackManager mCallbackManager;
     private boolean mIsLoggedIn;
     private GoogleSignInClient mGoogleSignInClient;
@@ -82,7 +91,13 @@ public class LoginActivity extends AppCompatActivity {
                 signIn();
             }
         });
-        mBtnSignUp.setOnClickListener(new View.OnClickListener() {
+//        mBtnSignUp.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                signUp();
+//            }
+//        });
+        mSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 signUp();
@@ -101,9 +116,9 @@ public class LoginActivity extends AppCompatActivity {
 
         if (mIsLoggedIn) {
             logIn();
-        } else if(googleSignInCheck()){
+        } else if (googleSignInCheck()) {
             logIn();
-        } else if(mAuth.getCurrentUser() != null){
+        } else if (mAuth.getCurrentUser() != null) {
             logIn();
         }
     }
@@ -119,7 +134,7 @@ public class LoginActivity extends AppCompatActivity {
         return account != null;
     }
 
-    private void signInGoogle(){
+    private void signInGoogle() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, Constants.GG_SIGN_IN);
     }
@@ -144,9 +159,12 @@ public class LoginActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onCancel() {}
+            public void onCancel() {
+            }
+
             @Override
-            public void onError(FacebookException error) {}
+            public void onError(FacebookException error) {
+            }
         });
     }
 
@@ -158,7 +176,8 @@ public class LoginActivity extends AppCompatActivity {
 
     private void signIn() {
         if (checkEditText()) {
-            mAuth.signInWithEmailAndPassword(mEmail.getText().toString(), mPassword.getText().toString())
+            mAuth.signInWithEmailAndPassword(mEmail.getEditText()
+                    .getText().toString(), mPassword.getEditText().getText().toString())
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -184,15 +203,15 @@ public class LoginActivity extends AppCompatActivity {
 
         mCallbackManager.onActivityResult(requestCode, resultCode, data);
 
-            if (requestCode == Constants.GG_SIGN_IN) {
-                Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
-                try {
-                    GoogleSignInAccount account = task.getResult(ApiException.class);
-                    firebaseAuthWithGoogle(account);
-                } catch (ApiException e) {
-                    Toast.makeText(LoginActivity.this, authFailed,
-                            Toast.LENGTH_SHORT).show();
-                }
+        if (requestCode == Constants.GG_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                firebaseAuthWithGoogle(account);
+            } catch (ApiException e) {
+                Toast.makeText(LoginActivity.this, authFailed,
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -220,10 +239,10 @@ public class LoginActivity extends AppCompatActivity {
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(!dataSnapshot.child("users").child(mAuth.getUid()).exists()){
-                    User user = new User("", task.getResult().getUser().getDisplayName(),"User",
+                if (!dataSnapshot.child("users").child(mAuth.getUid()).exists()) {
+                    User user = new User("", task.getResult().getUser().getDisplayName(), "User",
                             task.getResult().getUser().getUid(), task.getResult().getUser().getEmail());
-                    user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
+                    user.getQuests().put("child", new Quest("", "", 0, 0, 0));
                     mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                 }
             }
@@ -236,21 +255,29 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private boolean checkEditText() {
-        if (mEmail.getText().toString().isEmpty() && mPassword.getText().toString().isEmpty()) {
-            Toast.makeText(this, "Please enter login and password", Toast.LENGTH_LONG).show();
+        String email = mEmail.getEditText().getText().toString().trim();
+        if (email.isEmpty()) {
+            mEmail.setError("Please enter email");
+            return false;
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            mEmail.setError("Please enter a valid email address");
+            return false;
+        } else if (mPassword.getEditText().getText().toString().isEmpty()) {
+            mPassword.setError("Please enter password");
             return false;
         }
+        mEmail.setError(null);
+        mPassword.setError(null);
         return true;
     }
 
-    private void initButtons(){
+    private void initButtons() {
         mEmail = findViewById(R.id.email);
         mPassword = findViewById(R.id.password);
         mBtnSignIn = findViewById(R.id.btnSignIn);
-        mBtnSignUp = findViewById(R.id.btnSignUp);
         mGoogleSignInButton = findViewById(R.id.btnGoogleSignIn);
-        mGoogleSignInButton.setSize(SignInButton.SIZE_STANDARD);
         mFacebookLoginButton = findViewById(R.id.btnFacebookLogin);
+        mSignUp = findViewById(R.id.signUpTextView);
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {

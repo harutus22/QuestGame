@@ -8,4 +8,18 @@
     <color name="questBackColor"> #778899</color>
     <color name="questBackColorPressed">#708090</color>
     <color name="black"> #000000</color>
+    <color name="darkYellow"> #ecba5c</color>
+    <color name="darkRed"> #652121</color>
+    <color name="greyMixGreen"> #2f2800</color>
+    <color name="yellowMixBrown"> #876524</color>
+    <color name="greenMixBlue"> #cff6cb</color>
+    <color name="greenMixBlueDarker"> #76968d</color>
+    <color name="redMixBrown"> #673e3e</color>
+    <color name="violetMixBrown"> #453c49</color>
+    <color name="atomicGreen"> #2ddbb3</color>
+    <color name="violetMixDarkBlue"> #3819bf</color>
+    <color name="blue"> #2b83e5</color>
+    <color name="violet"> #762dd4</color>
+
+    
 </resources>

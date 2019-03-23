@@ -15,5 +15,7 @@
     <dimen name="quest_button_margin_top"> 5dp</dimen>
     <dimen name="quest_button_margin_end"> 5dp</dimen>
     <dimen name="group_of_markers"> 50dp</dimen>
+    <dimen name="login_logo_margin_top"> 30dp</dimen>
+    <dimen name="login_logo_padding"> 30dp</dimen>
 
 </resources>
