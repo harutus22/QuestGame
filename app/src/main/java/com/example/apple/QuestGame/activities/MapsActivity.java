@@ -121,10 +121,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-//        LatLng aca = new LatLng(40.198887912292537, 44.490739703178408);
-//        mMap.addMarker(new MarkerOptions().position(aca).title("Coin in ACA"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(aca));
-//        mMap.animateCamera(CameraUpdateFactory.zoomTo(18));
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -310,7 +306,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void setUpCluster() {
         // Position the map.
-//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(40.198887912292537, 44.490739703178408), 10));
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
