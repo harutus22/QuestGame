@@ -1,10 +1,12 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.arch.lifecycle.Observer;
-import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -22,8 +24,10 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.arsy.maps_library.MapRadar;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
 import com.example.apple.QuestGame.my_clusters.ClusterInfoViewAdapter;
@@ -39,6 +43,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -49,8 +54,8 @@ import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.clustering.ClusterManager;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -64,6 +69,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private DatabaseReference mDatabase;
     private Map<String, Coin> coins = new HashMap<>();
     private FirebaseAuth mAuth;
+    private MapRadar mapRadar;
+    private TextView points;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,7 +80,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mAuth = FirebaseAuth.getInstance();
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         mDatabase = FirebaseDatabase.getInstance().getReference();
-        initMap();
+        initPoints();
+
+    }
+
+    private void initPoints(){
+        points = findViewById(R.id.mapUserPoints);
+        int getPoints = getIntent().getIntExtra(Constants.POINTS, 0);
+        points.setText(String.valueOf(getPoints));
     }
 
     private void initilizeMap() {
@@ -129,9 +143,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setMyLocationEnabled(true);
 
         setUpCluster();
-        onClusterClick();
         zoomToMyLocation();
+        initRadar();
         addItems();
+        onClusterClick();
     }
 
     private void setItemsToLocation(final Coin coin) {
@@ -143,17 +158,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-//                change(location.getLatitude(), location.getLongitude());
+
                 LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+                mapRadar.withLatLng(latLng);
                 if (SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) < 100 && !coin.isCluster()) {
                         mClusterManager.addItem(coin);
                         mClusterManager.cluster();
-                        coins.get(coin.getTitle()).setCluster(true);
+                        Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(true);
                         Log.d("location", "100m");
                 } else if(SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) > 100 && coin.isCluster()){
                         mClusterManager.removeItem(coin);
                         mClusterManager.cluster();
-                        coins.get(coin.getTitle()).setCluster(false);
+                        try {
+                            Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(false);
+                        } catch (NullPointerException o){
+                            Log.d("true-false", "catched");
+                        }
                     }
                 }
 
@@ -171,7 +191,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        mLocationManager.requestLocationUpdates("gps", 10000, 5, mListener);
+        mLocationManager.requestLocationUpdates("gps", 1000, 2, mListener);
+    }
+
+    private void initRadar(){
+        //withRadarColors() have two parameters, startColor and tailColor respectively
+        //startColor should start with transparency, here 00 in front of fccd29 indicates fully transparent
+        //tailColor should end with opaqueness, here f in front of fccd29 indicates fully opaque
+        LatLng latLng = new LatLng(40.2018, 44.4964);
+        if(mapRadar == null) {
+            mapRadar = new MapRadar(mMap, latLng, getApplicationContext());
+        }
+        mapRadar.withDistance(100);
+        mapRadar.withOuterCircleStrokeColor(0xfccd29);
+        mapRadar.withRadarColors(0x00fccd29, 0xfffccd29);
+        mapRadar.startRadarAnimation();
     }
 
     private void zoomToMyLocation() {
@@ -190,9 +224,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             double longitude = location.getLongitude();
             LatLng myPosition = new LatLng(latitude, longitude);
 
-
-            LatLng coordinate = new LatLng(latitude, longitude);
-            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(coordinate, 19);
+            CameraUpdate yourLocation = CameraUpdateFactory.newLatLngZoom(myPosition, 19);
             mMap.moveCamera(CameraUpdateFactory.newLatLng(myPosition));
             mMap.animateCamera(yourLocation);
         }
@@ -201,13 +233,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        getQuests();
+//        Toast.makeText(this, "Starting", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Show time", Toast.LENGTH_LONG).show();
+        if (mMap == null) {
+            initMap();
+        } else {
+            initRadar();
+        }
         if (checkMapServices()) {
-            if (locationPermission) {
-                getQuests();
-            } else {
-                getLocationPermission();
-            }
+            getQuests();
+        } else {
+            getLocationPermission();
         }
     }
 
@@ -320,6 +356,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (mClusterRenderer == null) {
             mClusterRenderer = new ClusterRenderer(getApplicationContext(), mMap, mClusterManager);
             mClusterManager.setRenderer(mClusterRenderer);
+            mClusterManager.setAnimation(true);
         }
     }
 
@@ -346,14 +383,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     public boolean onClusterItemClick(final Coin clusterItem) {
 
                         Toast.makeText(MapsActivity.this, "Cluster item click", Toast.LENGTH_SHORT).show();
+                        points.setText(String.valueOf(Integer.valueOf(points.getText().toString()) +
+                                Integer.valueOf(clusterItem.getSnippet())));
 
                         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                long points = (long) dataSnapshot.child("users").child(mAuth.getUid()).child("points").getValue() +
-                                        Long.valueOf(clusterItem.getSnippet());
-                                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(points);
-                                coins.get(clusterItem.getTitle()).setCluster(false);
+                                int point = Integer.valueOf(points.getText().toString());
+                                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
                                 coins.remove(clusterItem.getTitle());
                                 mClusterManager.removeItem(clusterItem);
                                 mClusterManager.cluster();
@@ -398,5 +435,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnInfoWindowClickListener(mClusterManager);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mapRadar.isAnimationRunning()) {
+            mapRadar.stopRadarAnimation();
+        }
+        for (Map.Entry<String, Coin> stringCoinEntry : coins.entrySet()) {
+            stringCoinEntry.getValue().setCluster(false);
+        }
+    }
 }
 

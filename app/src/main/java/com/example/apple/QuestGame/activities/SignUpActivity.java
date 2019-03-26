@@ -3,6 +3,7 @@ package com.example.apple.QuestGame.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
@@ -23,12 +24,12 @@ public class SignUpActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
-    private EditText mEmail;
-    private EditText mPassword;
-    private EditText mBirthDate;
-    private EditText mUsername;
-    private EditText mName;
-    private EditText mSurname;
+    private TextInputLayout mEmail;
+    private TextInputLayout mPassword;
+    private TextInputLayout mBirthDate;
+    private TextInputLayout mUsername;
+    private TextInputLayout mName;
+    private TextInputLayout mSurname;
     private Button ready;
 
     @Override
@@ -62,15 +63,15 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void signUp() {
         if (checkEditText()) {
-            mAuth.createUserWithEmailAndPassword(mEmail.getText().toString(), mPassword.getText().toString())
+            mAuth.createUserWithEmailAndPassword(mEmail.getEditText().toString(), mPassword.getEditText().toString())
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
 
-                                User user = new User("", mName.getText().toString() +
-                                        mSurname.getText().toString(),mUsername.getText().toString(),
-                                        mUsername.getText().toString(), mEmail.getText().toString());
+                                User user = new User("", mName.getEditText().toString() +
+                                        mSurname.getEditText().toString(),mUsername.getEditText().toString(),
+                                        mUsername.getEditText().toString(), mEmail.getEditText().toString());
                                 user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                                 logIn();
@@ -84,9 +85,9 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private boolean checkEditText() {
-        if (mEmail.getText().toString().isEmpty() && mPassword.getText().toString().isEmpty() &&
-                mBirthDate.getText().toString().isEmpty() && mUsername.getText().toString().isEmpty() &&
-                mName.getText().toString().isEmpty() && mSurname.getText().toString().isEmpty()) {
+        if (mEmail.getEditText().toString().isEmpty() && mPassword.getEditText().toString().isEmpty() &&
+                mBirthDate.getEditText().toString().isEmpty() && mUsername.getEditText().toString().isEmpty() &&
+                mName.getEditText().toString().isEmpty() && mSurname.getEditText().toString().isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_LONG).show();
             return false;
         }

@@ -15,7 +15,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/quest_view_selector"
+        android:background="@drawable/login_text_selector"
         tools:context=".activity.MainActivity">
 
         <ImageView

@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             case R.id.action_map:
             {
                 Intent intent = new Intent(this,MapsActivity.class);
+                intent.putExtra(Constants.POINTS, Integer.valueOf(mPoints.getText().toString()));
                 startActivity(intent);
                 startLocationService();
             }
@@ -141,6 +142,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {
                             signOut();
+                            LoginManager.getInstance().logOut();
                         }
                     });
                 } else if (check.equals("password")){

@@ -12,4 +12,5 @@ public class Constants {
     public static final int ERROR_DIALOG_REQUEST = 401;
     public static final int IMAGE_REQUEST = 11;
     public static final int GG_SIGN_IN = 15;
+    public static final String  POINTS = "Points";
 }

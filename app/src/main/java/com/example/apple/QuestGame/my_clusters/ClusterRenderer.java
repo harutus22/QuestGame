@@ -1,12 +1,17 @@
 package com.example.apple.QuestGame.my_clusters;
 
+import android.animation.Animator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -15,7 +20,9 @@ import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.models.Coin;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
@@ -34,6 +41,7 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
     private final int markerHeight;
     private TextView textView;
     private Context mContext;
+    private Animator animator;
 
     public ClusterRenderer(Context context, GoogleMap map, ClusterManager<Coin> clusterManager) {
         super(context, map, clusterManager);
@@ -99,5 +107,25 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
         return cluster.getSize() > 4;
     }
 
+    @Override
+    protected void onClusterItemRendered(Coin clusterItem, Marker marker) {
+        super.onClusterItemRendered(clusterItem, marker);
+        animator = ObjectAnimator.ofFloat(marker
+                , "alpha", 1f, 0f);
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationEnd(Animator animator) {
+                Log.d("animation", "working");
+            }
+            @Override public void onAnimationStart(Animator animator) {
+            }
+            @Override public void onAnimationCancel(Animator animator) {}
+            @Override public void onAnimationRepeat(Animator animator) {
+            }
+        });
+        ((ObjectAnimator) animator).setRepeatCount(Animation.INFINITE);
+        animator.setDuration(5000).start();
+
+    }
 
 }
