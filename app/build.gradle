@@ -41,6 +41,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     implementation 'org.jetbrains:annotations-java5:15.0'
+
+    implementation(name: 'wikitudesdk', ext: 'aar')
+    implementation 'com.google.ar:core:1.7.0'
 }
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.android.application'
+

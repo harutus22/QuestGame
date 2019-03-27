@@ -10,7 +10,6 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -57,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private DatabaseReference mRef;
+    private FirebaseAuth mAuth;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean connected;
@@ -78,12 +78,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             }
         });
         getUserInfo();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    Constants.LOCATION_REQUEST_CODE);
-        }
     }
 
     private void fireBaseInit() {
@@ -109,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 intent.putExtra(Constants.POINTS, Integer.valueOf(mPoints.getText().toString()));
                 startActivity(intent);
                 startLocationService();
-
             }
         }
         return true;
@@ -189,12 +182,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         if(requestCode == Constants.IMAGE_REQUEST){
             if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
                 getPhoto();
-            }
-        } else if (requestCode == Constants.LOCATION_REQUEST_CODE){
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
-                    PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission
-                    (this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-                finish();
             }
         }
     }
@@ -472,6 +459,75 @@ private void writeNewPost(String userId, String username, String title, String b
         });
     }
 
+    //if client is disconected
+    private void disconected(){
+        DatabaseReference presenceRef = FirebaseDatabase.getInstance().getReference("disconnectmessage");
+// Write a string when this client loses connection
+        presenceRef.onDisconnect().setValue("I disconnected!");
+
+        // to check if disconect is attached
+
+        presenceRef.onDisconnect().removeValue(new DatabaseReference.CompletionListener() {
+            @Override
+            public void onComplete(DatabaseError error, @NonNull DatabaseReference reference) {
+                if (error != null) {
+                    Log.d("", "could not establish onDisconnect event:" + error.getMessage());
+                }
+            }
+        });
+
+        // change that i disconected
+        OnDisconnect onDisconnectRef = presenceRef.onDisconnect();
+        onDisconnectRef.setValue("I am disconnected");
+// ...
+// some time later when we change our minds
+// ...
+        onDisconnectRef.cancel();
+    }
+
+    private boolean checkConnection(){
+        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                if (connected) {
+                    Log.d("", "connected");
+                    con(true);
+                } else {
+                    Log.d("", "not connected");
+                    con(false);
+                }
+            }
+
+            private void con(boolean connection){
+                connected = connection;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("", "Listener was cancelled");
+                con(false);
+            }
+        });
+        return connected;
+    }
+
+    private void timeCheck(){
+        DatabaseReference offsetRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset");
+        offsetRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                double offset = snapshot.getValue(Double.class);
+                double estimatedServerTimeMs = System.currentTimeMillis() + offset;
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.w("", "Listener was cancelled");
+            }
+        });
+    }
 
     private void startLocationService(){
         if(!isLocationServiceRunning()){
