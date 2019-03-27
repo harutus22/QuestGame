@@ -22,6 +22,7 @@ import android.util.Log;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
 import com.example.apple.QuestGame.models.Coin;
+import com.example.apple.QuestGame.utils.Constants;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -73,20 +74,20 @@ public class LocationService extends IntentService {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-//        if (Build.VERSION.SDK_INT >= 26) {
-//            String CHANNEL_ID = "my_channel_01";
-//            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
-//                    "My Channel",
-//                    NotificationManager.IMPORTANCE_DEFAULT);
-//
-//            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
-//
-//            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-//                    .setContentTitle("fafaa")
-//                    .setContentText("sdassdada").build();
-//
-//            startForeground(1, notification);
-//        }
+        if (Build.VERSION.SDK_INT >= 26) {
+            String CHANNEL_ID = "my_channel_01";
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID,
+                    "My Channel",
+                    NotificationManager.IMPORTANCE_DEFAULT);
+
+            ((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE)).createNotificationChannel(channel);
+
+            Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setContentTitle("fafaa")
+                    .setContentText("sdassdada").build();
+
+            startForeground(1, notification);
+        }
     }
 
     @Override
@@ -100,9 +101,9 @@ public class LocationService extends IntentService {
 
         LocationRequest mLocationRequestHighAccuracy = new LocationRequest();
         mLocationRequestHighAccuracy.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequestHighAccuracy.setInterval(UPDATE_INTERVAL);
-        mLocationRequestHighAccuracy.setFastestInterval(FASTEST_INTERVAL);
-        mLocationRequestHighAccuracy.setSmallestDisplacement(DISPLACEMENT_UPDATE);
+        mLocationRequestHighAccuracy.setInterval(Constants.UPDATE_INTERVAL);
+        mLocationRequestHighAccuracy.setFastestInterval(Constants.FASTEST_INTERVAL);
+        mLocationRequestHighAccuracy.setSmallestDisplacement(Constants.DISPLACEMENT_UPDATE);
 
         // new Google API SDK v11 uses getFusedLocationProviderClient(this)
         if (ActivityCompat.checkSelfPermission(this,
