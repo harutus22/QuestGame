@@ -49,6 +49,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.util.Objects;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
@@ -56,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private DatabaseReference mRef;
-    private FirebaseAuth mAuth;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean connected;
@@ -103,7 +103,13 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 intent.putExtra(Constants.POINTS, Integer.valueOf(mPoints.getText().toString()));
                 startActivity(intent);
                 startLocationService();
-            }
+            } break;
+
+            case R.id.action_play:
+            {
+                Intent intent = new Intent(this, ArActivity.class);
+                startActivity(intent);
+            } break;
         }
         return true;
     }
@@ -249,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 //                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
 //                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
 
-                    mUsername.setText(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
+                    mUsername.setText(Objects.requireNonNull(dataSnapshot.child("users").child(userId).getValue(User.class)).getUser_name());
                     mPoints.setText(String.valueOf(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints()));
                 }
 

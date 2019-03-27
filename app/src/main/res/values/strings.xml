@@ -28,4 +28,6 @@
     <string name="surname">surname</string>
     <string name="ready">Ready</string>
     <string name="don_t_have_an_account_n_sign_up">"Don\'t have an account? \n              Sign up"</string>
+
+    <string name="error_loading_ar_experience">Could not load AR experience.</string>
 </resources>
