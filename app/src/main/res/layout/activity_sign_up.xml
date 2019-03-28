@@ -125,7 +125,7 @@
     </android.support.design.widget.TextInputLayout>
 
     <android.support.design.widget.TextInputLayout
-        android:id="@+id/nameSignUp"
+        android:id="@+id/fullnameSignUp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintTop_toBottomOf="@id/userNameSignUp"
@@ -149,30 +149,7 @@
 
     </android.support.design.widget.TextInputLayout>
 
-    <android.support.design.widget.TextInputLayout
-        android:id="@+id/surnameSignUp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/nameSignUp"
-        app:layout_constraintStart_toStartOf="@id/emailSignUp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="8dp"
-        app:errorEnabled="true"
-        style="@style/LoginTextInputLayoutStyle"
-        >
 
-        <android.support.design.widget.TextInputEditText
-            android:layout_width="wrap_content"
-            android:layout_height="50dp"
-            android:ems="10"
-            android:hint="@string/surname"
-            android:importantForAutofill="no"
-            android:inputType="textPersonName"
-            android:background="@drawable/edit_text_round"
-            android:paddingStart="10dp"
-            />
-
-    </android.support.design.widget.TextInputLayout>
 
     <Button
         android:id="@+id/finishSignUp"
@@ -185,7 +162,7 @@
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/surnameSignUp"
+        app:layout_constraintTop_toBottomOf="@+id/fullnameSignUp"
         android:shadowColor="#FFFFFF"
         android:shadowDx="2"
         android:shadowDy="5"
