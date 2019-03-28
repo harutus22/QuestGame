@@ -1,6 +1,7 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
+import android.arch.lifecycle.Observer;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -54,7 +55,7 @@ public class ArActivity extends AppCompatActivity {
         checkPermissions();
         addArchitectView();
         getLocation();
-        final JSONArray jsonArray = generatePoiInformation();
+        final JSONArray jsonArray = generateCoinInformation();
         mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
 
     }
@@ -83,11 +84,10 @@ public class ArActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable LatLng latLng) {
                 myLocation = latLng;
-                final JSONArray jsonArray = generatePoiInformation();
+                final JSONArray jsonArray = generateCoinInformation();
                 mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
             }
         });
-
 
 
     }
@@ -184,53 +184,47 @@ public class ArActivity extends AppCompatActivity {
 
     }
 
-    private static JSONArray generatePoiInformation() {
-    private JSONArray generatePoiInformation() {
 
-        final JSONArray coins = new JSONArray();
-        final String ATTR_LATITUDE = "latitude";
-        final String ATTR_LONGITUDE = "longitude";
-        final HashMap<String, String> coinInformation = new HashMap<>();
-        double[] coinLocationLatLon = new double[]{40.201125, 44.494802};
+        private JSONArray generateCoinInformation() {
 
-        coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
-        coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
-        coins.put(new JSONObject(coinInformation));
+            final JSONArray coins = new JSONArray();
+            final String ATTR_LATITUDE = "latitude";
+            final String ATTR_LONGITUDE = "longitude";
+            final HashMap<String, String> coinInformation = new HashMap<>();
+            for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
 
+                if (myLocation != null) {
+                    LatLng latLng = myLocation;
 
-        for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
+                    double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
 
-            if(myLocation != null) {
-                LatLng latLng = myLocation;
+                    if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
+                            !stringCoinEntry.getValue().isCluster()) {
+                        coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
+                        coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
+                        coins.put(new JSONObject(coinInformation));
+                    }
+                }
+            }
 
-                double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
+            return coins;
+        }
 
-                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
-                        !stringCoinEntry.getValue().isCluster()) {
-                    coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
-                    coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
-                    coins.put(new JSONObject(coinInformation));
+        private void checkPermissions () {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            REQUEST_FINE_LOCATION);
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (checkSelfPermission(Manifest.permission.CAMERA)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{Manifest.permission.CAMERA},
+                            MY_CAMERA_REQUEST_CODE);
                 }
             }
         }
 
-        return coins;
-    }
-
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_FINE_LOCATION);
-            }
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
-            }
-        }
-    }
 
 }
