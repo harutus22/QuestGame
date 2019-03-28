@@ -12,12 +12,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
+import com.example.apple.QuestGame.live_data.MyLocationLiveData;
+import com.example.apple.QuestGame.models.Coin;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.maps.android.SphericalUtil;
 import com.wikitude.architect.ArchitectStartupConfiguration;
 import com.wikitude.architect.ArchitectView;
 
@@ -26,6 +31,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class ArActivity extends AppCompatActivity {
@@ -37,6 +43,8 @@ public class ArActivity extends AppCompatActivity {
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
+    private Map<String, Coin> coinsData = new HashMap<>();
+    private LatLng myLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +65,31 @@ public class ArActivity extends AppCompatActivity {
         config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
         config.setLicenseKey(getString(R.string.wikitude_license_key));
         mArchitectView.onCreate(config);
+
+        CoinsLiveDataProvider.mCoins.observe(this, new Observer<HashMap<String, Coin>>() {
+            @Override
+            public void onChanged(@Nullable HashMap<String, Coin> coin) {
+                coinsData = coin;
+                getLocation();
+
+                final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
+                config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
+                config.setLicenseKey(getString(R.string.wikitude_license_key));
+                mArchitectView.onCreate(config);
+            }
+        });
+
+        MyLocationLiveData.myLocation.observe(this, new Observer<LatLng>() {
+            @Override
+            public void onChanged(@Nullable LatLng latLng) {
+                myLocation = latLng;
+                final JSONArray jsonArray = generatePoiInformation();
+                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
+            }
+        });
+
+
+
     }
 
     private void getLocation() {
@@ -81,6 +114,7 @@ public class ArActivity extends AppCompatActivity {
             return;
         }
         mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+
     }
 
 
@@ -151,6 +185,8 @@ public class ArActivity extends AppCompatActivity {
     }
 
     private static JSONArray generatePoiInformation() {
+    private JSONArray generatePoiInformation() {
+
         final JSONArray coins = new JSONArray();
         final String ATTR_LATITUDE = "latitude";
         final String ATTR_LONGITUDE = "longitude";
@@ -160,6 +196,23 @@ public class ArActivity extends AppCompatActivity {
         coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
         coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
         coins.put(new JSONObject(coinInformation));
+
+
+        for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
+
+            if(myLocation != null) {
+                LatLng latLng = myLocation;
+
+                double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
+
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
+                        !stringCoinEntry.getValue().isCluster()) {
+                    coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
+                    coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
+                    coins.put(new JSONObject(coinInformation));
+                }
+            }
+        }
 
         return coins;
     }

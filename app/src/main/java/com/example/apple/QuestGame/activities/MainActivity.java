@@ -49,7 +49,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.util.Objects;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
@@ -57,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private DatabaseReference mRef;
+    private FirebaseAuth mAuth;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean connected;
@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         init();
+        startLocationService();
         fireBaseInit();
         Button button = findViewById(R.id.button3);
         button.setOnClickListener(new View.OnClickListener() {
@@ -102,7 +103,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
                 Intent intent = new Intent(this,MapsActivity.class);
                 intent.putExtra(Constants.POINTS, Integer.valueOf(mPoints.getText().toString()));
                 startActivity(intent);
-                startLocationService();
             } break;
 
             case R.id.action_play:
@@ -255,7 +255,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 //                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
 //                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
 
-                    mUsername.setText(Objects.requireNonNull(dataSnapshot.child("users").child(userId).getValue(User.class)).getUser_name());
+                    mUsername.setText(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
                     mPoints.setText(String.valueOf(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints()));
                 }
 
@@ -538,7 +538,6 @@ private void writeNewPost(String userId, String username, String title, String b
     private void startLocationService(){
         if(!isLocationServiceRunning()){
             Intent serviceIntent = new Intent(this, LocationService.class);
-//        this.startService(serviceIntent);
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
                 MainActivity.this.startForegroundService(serviceIntent);

@@ -1,10 +1,20 @@
 package com.example.apple.QuestGame.activities;
 
+import android.Manifest;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
@@ -64,36 +74,39 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        mAuth = FirebaseAuth.getInstance();
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        if(checkConnection()) {
 
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        mIsLoggedIn = accessToken != null && !accessToken.isExpired();
+            mAuth = FirebaseAuth.getInstance();
+            mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        googleSignInConfigure();
-        initButtons();
+            AccessToken accessToken = AccessToken.getCurrentAccessToken();
+            mIsLoggedIn = accessToken != null && !accessToken.isExpired();
 
-        checkIfLogedIn();
+            googleSignInConfigure();
+            initButtons();
 
-        mBtnSignIn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signIn();
-            }
-        });
-        mSignUp.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signUp();
-            }
-        });
-        mGoogleSignInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                signInGoogle();
-            }
-        });
-        facebookLogin();
+            checkIfLogedIn();
+
+            mBtnSignIn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signIn();
+                }
+            });
+            mSignUp.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signUp();
+                }
+            });
+            mGoogleSignInButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    signInGoogle();
+                }
+            });
+            facebookLogin();
+        }
     }
 
     private void checkIfLogedIn() {
@@ -110,7 +123,9 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        setGooglePlusButtonText("Sign in");
+        if(checkConnection()) {
+            setGooglePlusButtonText("Sign in");
+        }
     }
 
     private boolean googleSignInCheck() {
@@ -302,5 +317,36 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
+    private boolean checkConnection(){
+        ConnectivityManager cm =
+                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnected();
+        if(isConnected) {
+            Log.d("Network", "Connected");
+            return true;
+        }
+        else{
+            noInternetDialog();
+            Log.d("Network","Not Connected");
+            return false;
+        }
+    }
+
+    private void noInternetDialog(){
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("No internet Connection");
+        builder.setMessage("Please turn on internet connection and start app");
+        builder.setNegativeButton("close", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                finish();
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
 }

@@ -7,7 +7,6 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
@@ -28,8 +27,7 @@ public class SignUpActivity extends AppCompatActivity {
     private TextInputLayout mPassword;
     private TextInputLayout mBirthDate;
     private TextInputLayout mUsername;
-    private TextInputLayout mName;
-    private TextInputLayout mSurname;
+    private TextInputLayout mFullame;
     private Button ready;
 
     @Override
@@ -56,8 +54,7 @@ public class SignUpActivity extends AppCompatActivity {
         mPassword = findViewById(R.id.passwordSignUp);
         mBirthDate = findViewById(R.id.birthdaySignUp);
         mUsername = findViewById(R.id.userNameSignUp);
-        mName = findViewById(R.id.nameSignUp);
-        mSurname = findViewById(R.id.surnameSignUp);
+        mFullame = findViewById(R.id.fullnameSignUp);
         ready = findViewById(R.id.finishSignUp);
     }
 
@@ -69,8 +66,8 @@ public class SignUpActivity extends AppCompatActivity {
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
 
-                                User user = new User("", mName.getEditText().toString() +
-                                        mSurname.getEditText().toString(),mUsername.getEditText().toString(),
+                                User user = new User("", mFullame.getEditText().toString(),
+                                        mUsername.getEditText().toString(),
                                         mUsername.getEditText().toString(), mEmail.getEditText().toString());
                                 user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
@@ -87,7 +84,7 @@ public class SignUpActivity extends AppCompatActivity {
     private boolean checkEditText() {
         if (mEmail.getEditText().toString().isEmpty() && mPassword.getEditText().toString().isEmpty() &&
                 mBirthDate.getEditText().toString().isEmpty() && mUsername.getEditText().toString().isEmpty() &&
-                mName.getEditText().toString().isEmpty() && mSurname.getEditText().toString().isEmpty()) {
+                mFullame.getEditText().toString().isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_LONG).show();
             return false;
         }

@@ -1,9 +1,7 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.arch.lifecycle.Observer;
@@ -15,6 +13,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -36,6 +35,11 @@ import com.example.apple.QuestGame.my_clusters.ClusterRenderer;
 import com.example.apple.QuestGame.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -43,7 +47,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -65,57 +69,30 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ClusterManager<Coin> mClusterManager;
     private ClusterRenderer mClusterRenderer;
     private LocationManager mLocationManager;
-    private LocationListener mListener;
     private DatabaseReference mDatabase;
     private Map<String, Coin> coins = new HashMap<>();
     private FirebaseAuth mAuth;
     private MapRadar mapRadar;
     private TextView points;
+    private FusedLocationProviderClient fusedLocationClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         getLocationPermission();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mAuth = FirebaseAuth.getInstance();
         mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         mDatabase = FirebaseDatabase.getInstance().getReference();
         initPoints();
-
     }
 
-    private void initPoints(){
+    private void initPoints() {
         points = findViewById(R.id.mapUserPoints);
         int getPoints = getIntent().getIntExtra(Constants.POINTS, 0);
         points.setText(String.valueOf(getPoints));
     }
-
-    private void initilizeMap() {
-        final int avatar = R.drawable.coin;
-        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for (DataSnapshot dataSnapshot1 : dataSnapshot.child("coins").getChildren()) {
-
-                    String key = dataSnapshot1.getKey();
-//                    int avatar = dataSnapshot1.child("iconPicture").getValue(Integer.class);
-                    String snippet = dataSnapshot1.child("snippet").getValue(String.class);
-                    Double latitude = dataSnapshot1.child("position").child("latitude").getValue(Double.class);
-                    Double longitude = dataSnapshot1.child("position").child("longitude").getValue(Double.class);
-                    Coin coin = new Coin(latitude, longitude, key, snippet, avatar);
-                    Log.d("coin", coin.getTitle() + "\n" + coin.getPosition() + coin.getSnippet());
-                    coins.put(key, coin);
-                }
-//                addItems();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        });
-    }
-
 
     private void initMap() {
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
@@ -131,75 +108,81 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    @SuppressLint("MissingPermission")
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
         mMap.setMyLocationEnabled(true);
-
         setUpCluster();
         zoomToMyLocation();
-        initRadar();
-        addItems();
+        getFusedLocation();
         onClusterClick();
     }
 
-    private void setItemsToLocation(final Coin coin) {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        mListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
+    @SuppressLint("MissingPermission")
+    private void getFusedLocation() {
+        fusedLocationClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
 
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mapRadar.withLatLng(latLng);
-                if (SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) < 100 && !coin.isCluster()) {
-                        mClusterManager.addItem(coin);
-                        mClusterManager.cluster();
-                        Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(true);
-                        Log.d("location", "100m");
-                } else if(SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) > 100 && coin.isCluster()){
-                        mClusterManager.removeItem(coin);
-                        mClusterManager.cluster();
-                        try {
-                            Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(false);
-                        } catch (NullPointerException o){
-                            Log.d("true-false", "catched");
+                        Location location = locationResult.getLastLocation();
+                        double latitude = locationResult.getLastLocation().getLatitude();
+                        double longitude = locationResult.getLastLocation().getLongitude();
+
+                        if (location != null) {
+                            Log.d("move", String.valueOf(latitude) + " " +
+                                    String.valueOf(longitude));
+                            addItems(location);
                         }
                     }
-                }
-
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-            }
-        };
-
-        mLocationManager.requestLocationUpdates("gps", 1000, 2, mListener);
+                },
+                Looper.myLooper());
     }
 
-    private void initRadar(){
+    private LocationRequest getLocationRequest() {
+        LocationRequest locationRequestHighAccuracy = new LocationRequest();
+        locationRequestHighAccuracy.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequestHighAccuracy.setInterval(Constants.UPDATE_INTERVAL);
+        locationRequestHighAccuracy.setFastestInterval(Constants.FASTEST_INTERVAL);
+        locationRequestHighAccuracy.setSmallestDisplacement(Constants.DISPLACEMENT_UPDATE);
+        return locationRequestHighAccuracy;
+    }
+
+    @SuppressLint("MissingPermission")
+    private void setItemsToLocation(final Coin coin, Location location) {
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        mapRadar.withLatLng(latLng);
+        if (SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) < 100 && !coin.isCluster()) {
+            mClusterManager.addItem(coin);
+            mClusterManager.cluster();
+            Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(true);
+            Log.d("location", "100m");
+        } else if (SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) > 100 && coin.isCluster()) {
+            mClusterManager.removeItem(coin);
+            mClusterManager.cluster();
+            try {
+                Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(false);
+            } catch (NullPointerException o) {
+                Log.d("true-false", "catched");
+            }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private Location getLastLocation() {
+        Criteria criteria = new Criteria();
+        String provider = mLocationManager.getBestProvider(criteria, true);
+        return mLocationManager.getLastKnownLocation(provider);
+    }
+
+    private void initRadar() {
         //withRadarColors() have two parameters, startColor and tailColor respectively
         //startColor should start with transparency, here 00 in front of fccd29 indicates fully transparent
         //tailColor should end with opaqueness, here f in front of fccd29 indicates fully opaque
-        LatLng latLng = new LatLng(40.2018, 44.4964);
-        if(mapRadar == null) {
+
+        Location location = getLastLocation();
+        if (mapRadar == null) {
+            LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
             mapRadar = new MapRadar(mMap, latLng, getApplicationContext());
         }
         mapRadar.withDistance(100);
@@ -209,15 +192,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void zoomToMyLocation() {
-        Criteria criteria = new Criteria();
-        String provider = mLocationManager.getBestProvider(criteria, true);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        Location location = mLocationManager.getLastKnownLocation(provider);
-
+        Location location = getLastLocation();
+        initRadar();
 
         if (location != null) {
             double latitude = location.getLatitude();
@@ -233,10 +209,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-//        Toast.makeText(this, "Starting", Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, "Show time", Toast.LENGTH_LONG).show();
+        if (coins.isEmpty()) {
+            addItems(getLastLocation());
+        }
         if (mMap == null) {
-            initMap();
+            if (locationPermission) {
+                initMap();
+            } else {
+                finish();
+            }
         } else {
             initRadar();
         }
@@ -329,9 +310,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private boolean checkMapServices() {
         if (isService()) {
-            if (isMapEnabled()) {
-                return true;
-            }
+            return isMapEnabled();
         }
         return false;
     }
@@ -361,9 +340,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
-    private void addItems() {
+    private void addItems(Location location) {
         for (Map.Entry<String, Coin> stringCoinEntry : coins.entrySet()) {
-            setItemsToLocation(stringCoinEntry.getValue());
+            setItemsToLocation(stringCoinEntry.getValue(), location);
         }
     }
 
@@ -382,7 +361,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public boolean onClusterItemClick(final Coin clusterItem) {
 
-                        Toast.makeText(MapsActivity.this, "Cluster item click", Toast.LENGTH_SHORT).show();
                         points.setText(String.valueOf(Integer.valueOf(points.getText().toString()) +
                                 Integer.valueOf(clusterItem.getSnippet())));
 
@@ -438,7 +416,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onStop() {
         super.onStop();
-        if (mapRadar.isAnimationRunning()) {
+        if (mapRadar.isAnimationRunning() && mapRadar != null) {
             mapRadar.stopRadarAnimation();
         }
         for (Map.Entry<String, Coin> stringCoinEntry : coins.entrySet()) {
