@@ -186,10 +186,11 @@ public class ArActivity extends AppCompatActivity {
         for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
 
             if(myLocation != null) {
+                LatLng latLng = myLocation;
 
                 double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
 
-                if (SphericalUtil.computeDistanceBetween(myLocation, stringCoinEntry.getValue().getPosition()) < 15 &&
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
                         !stringCoinEntry.getValue().isCluster()) {
                     coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
                     coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
