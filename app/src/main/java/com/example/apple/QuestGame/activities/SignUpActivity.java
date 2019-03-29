@@ -60,15 +60,15 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void signUp() {
         if (checkEditText()) {
-            mAuth.createUserWithEmailAndPassword(mEmail.getEditText().toString(), mPassword.getEditText().toString())
+            mAuth.createUserWithEmailAndPassword(mEmail.getEditText().getText().toString(), mPassword.getEditText().getText().toString())
                     .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
 
-                                User user = new User("", mFullame.getEditText().toString(),
-                                        mUsername.getEditText().toString(),
-                                        mUsername.getEditText().toString(), mEmail.getEditText().toString());
+                                User user = new User("", mFullame.getEditText().getText().toString(),
+                                        mUsername.getEditText().getText().toString(),
+                                        mUsername.getEditText().getText().toString(), mEmail.getEditText().getText().toString());
                                 user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                                 logIn();

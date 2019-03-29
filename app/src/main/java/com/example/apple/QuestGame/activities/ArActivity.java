@@ -93,6 +93,7 @@ public class ArActivity extends AppCompatActivity {
     }
 
     private void getLocation() {
+
         mLocationRequest = LocationRequest.create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setInterval(10 * 1000)
@@ -126,7 +127,7 @@ public class ArActivity extends AppCompatActivity {
 
         switch (requestCode) {
             case MY_CAMERA_REQUEST_CODE: {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
@@ -134,7 +135,7 @@ public class ArActivity extends AppCompatActivity {
                 break;
             }
             case REQUEST_FINE_LOCATION:
-                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                             && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         return;

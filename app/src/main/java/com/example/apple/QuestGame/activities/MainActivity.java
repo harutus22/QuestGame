@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     BottomNavigationView mBottomNavigationView;
     private FirebaseStorage storage;
     private DatabaseReference mRef;
-    private FirebaseAuth mAuth;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean connected;
