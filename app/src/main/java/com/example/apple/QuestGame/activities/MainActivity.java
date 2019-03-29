@@ -54,10 +54,8 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
     BottomNavigationView mBottomNavigationView;
-    private FirebaseStorage storage;
     private DatabaseReference mRef;
     private FirebaseAuth mAuth;
-    private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
     private boolean connected;
     private TextView mUsername;
@@ -71,18 +69,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         init();
         startLocationService();
         fireBaseInit();
-        Button button = findViewById(R.id.button3);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setUserImage();
-            }
-        });
         getUserInfo();
     }
 
     private void fireBaseInit() {
-        storage = FirebaseStorage.getInstance();
         mRef = FirebaseDatabase.getInstance().getReference();
     }
 
@@ -165,74 +155,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     }
 
 
-    // If we want to set user image
-    private void setUserImage(){
-        onOpenGalleryClick();
-    }
-
-    private void onOpenGalleryClick(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.IMAGE_REQUEST);
-            } else {
-               getPhoto();
-            }
-        } else {
-            getPhoto();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == Constants.IMAGE_REQUEST){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                getPhoto();
-            }
-        }
-    }
-
-    private void getPhoto() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, Constants.IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if(resultCode == RESULT_OK){
-            if(requestCode == Constants.IMAGE_REQUEST){
-                Uri imageDataUri = data.getData();
-//                userImage.setImageURI(imageDataUri);
-                uploadToFireBase(imageDataUri);
-            }
-        }
-    }
-
-    private void uploadToFireBase(Uri imageUri) {
-        StorageReference storageRef = storage.getReference();
-        StorageReference riversRef = storageRef.child("images").child(imageName);
-        UploadTask uploadTask = riversRef.putFile(imageUri);
-
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                toast(false);
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                toast(true);
-            }
-        });
-    }
-    private void toast(boolean success){
-        if(!success) {
-            Toast.makeText(this, "Can not upload file", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Upload completed", Toast.LENGTH_LONG).show();
-        }
-    }
 
     private void getUserInfo(){
         //TODO use to get user info
