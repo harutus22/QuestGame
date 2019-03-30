@@ -73,7 +73,7 @@ public class ArActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable LatLng latLng) {
                 myLocation = latLng;
-                final JSONArray jsonArray = generatePoiInformation();
+                final JSONArray jsonArray = generateCoinInformation();
                 mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
             }
         });

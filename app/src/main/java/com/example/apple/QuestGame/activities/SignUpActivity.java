@@ -94,12 +94,12 @@ public class SignUpActivity extends AppCompatActivity {
         mEmail = findViewById(R.id.emailSignUp);
         mPassword = findViewById(R.id.passwordSignUp);
         mBirthDate = findViewById(R.id.birthdaySignUp);
-        mBirthDateField = findViewById(R.id.birthdaySignUpField);
+//        mBirthDateField = findViewById(R.id.birthdaySignUpField);
         mUsername = findViewById(R.id.userNameSignUp);
         mFullame = findViewById(R.id.fullnameSignUp);
         ready = findViewById(R.id.finishSignUp);
         button = findViewById(R.id.button);
-        userImage = findViewById(R.id.userImage);
+//        userImage = findViewById(R.id.userImage);
 
         mBirthDateField.setOnClickListener(new View.OnClickListener() {
             @Override
