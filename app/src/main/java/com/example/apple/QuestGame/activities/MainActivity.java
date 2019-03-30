@@ -2,14 +2,21 @@ package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -42,23 +49,14 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.OnDisconnect;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
-import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
     BottomNavigationView mBottomNavigationView;
-    private FirebaseStorage storage;
     private DatabaseReference mRef;
-    private String imageName = UUID.randomUUID().toString() + ".jpg";
     private GoogleSignInClient mGoogleSignInClient;
-    private boolean connected;
     private TextView mUsername;
     private TextView mPoints;
     private String userId;
@@ -67,25 +65,23 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getLocationPermission();
         init();
-        startLocationService();
         fireBaseInit();
-        Button button = findViewById(R.id.button3);
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setUserImage();
-            }
-        });
         getUserInfo();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        startLocationService();
+    }
+
     private void fireBaseInit() {
-        storage = FirebaseStorage.getInstance();
         mRef = FirebaseDatabase.getInstance().getReference();
     }
 
-    private void init(){
+    private void init() {
         mBottomNavigationView = findViewById(R.id.bottom_navigation_view);
         mBottomNavigationView.setOnNavigationItemSelectedListener(this);
         mUsername = findViewById(R.id.usernameMain);
@@ -95,20 +91,20 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
 
-        switch (menuItem.getItemId()){
+        switch (menuItem.getItemId()) {
 
-            case R.id.action_map:
-            {
-                Intent intent = new Intent(this,MapsActivity.class);
+            case R.id.action_map: {
+                Intent intent = new Intent(this, MapsActivity.class);
                 intent.putExtra(Constants.POINTS, Integer.valueOf(mPoints.getText().toString()));
                 startActivity(intent);
-            } break;
+            }
+            break;
 
-            case R.id.action_play:
-            {
+            case R.id.action_play: {
                 Intent intent = new Intent(this, ArActivity.class);
                 startActivity(intent);
-            } break;
+            }
+            break;
         }
         return true;
     }
@@ -122,137 +118,69 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        String check = "";
-        switch (item.getItemId()){
-            case R.id.logOut:{
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    for (UserInfo profile : user.getProviderData()) {
-                        check = profile.getProviderId();
-                        Toast.makeText(this, check, Toast.LENGTH_LONG).show();
-                    }
-                }
 
-                if(check.equals("facebook.com")) {
-                    signOut();
-                    LoginManager.getInstance().logOut();
-                } else if(check.equals("google.com")){
-                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(getString(R.string.google_id_client))
-                            .requestEmail().requestId().requestProfile()
-                            .build();
-
-                    mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-                    mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            signOut();
-                            LoginManager.getInstance().logOut();
-                        }
-                    });
-                } else if (check.equals("password")){
-                    signOut();
-                }
+        switch (item.getItemId()) {
+            case R.id.logOut: {
+                signOut();
                 finish();
             }
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void signOut(){
+    private void logOut() {
         FirebaseAuth.getInstance().signOut();
     }
 
-
-    // If we want to set user image
-    private void setUserImage(){
-        onOpenGalleryClick();
-    }
-
-    private void onOpenGalleryClick(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
-                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.IMAGE_REQUEST);
-            } else {
-               getPhoto();
-            }
-        } else {
-            getPhoto();
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == Constants.IMAGE_REQUEST){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
-                getPhoto();
-            }
-        }
-    }
-
-    private void getPhoto() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        startActivityForResult(intent, Constants.IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if(resultCode == RESULT_OK){
-            if(requestCode == Constants.IMAGE_REQUEST){
-                Uri imageDataUri = data.getData();
-//                userImage.setImageURI(imageDataUri);
-                uploadToFireBase(imageDataUri);
-            }
-        }
-    }
-
-    private void uploadToFireBase(Uri imageUri) {
-        StorageReference storageRef = storage.getReference();
-        StorageReference riversRef = storageRef.child("images").child(imageName);
-        UploadTask uploadTask = riversRef.putFile(imageUri);
-
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                toast(false);
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                toast(true);
-            }
-        });
-    }
-    private void toast(boolean success){
-        if(!success) {
-            Toast.makeText(this, "Can not upload file", Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(this, "Upload completed", Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void getUserInfo(){
-        //TODO use to get user info
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        userId = user.getUid();
+    private void signOut(){
         String check = "";
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             for (UserInfo profile : user.getProviderData()) {
                 check = profile.getProviderId();
                 Toast.makeText(this, check, Toast.LENGTH_LONG).show();
             }
         }
+
+        if (check.equals("facebook.com")) {
+            logOut();
+            LoginManager.getInstance().logOut();
+        } else if (check.equals("google.com")) {
+            GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                    .requestIdToken(getString(R.string.google_id_client))
+                    .requestEmail().requestId().requestProfile()
+                    .build();
+
+            mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+            mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    logOut();
+                    LoginManager.getInstance().logOut();
+                }
+            });
+        } else if (check.equals("password")) {
+            logOut();
+        }
+    }
+
+
+    private void getUserInfo() {
+        //TODO use to get user info
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            userId = user.getUid();
+            String check = "";
+            if (user != null) {
+                for (UserInfo profile : user.getProviderData()) {
+                    check = profile.getProviderId();
+                    Toast.makeText(this, check, Toast.LENGTH_LONG).show();
+                }
+            }
 //        if(check.equals("password")) {
             mRef.addValueEventListener(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-//                String email = dataSnapshot.child(userId).getValue(User.class).getMail();
-//                Uri photoUrl = user.getPhotoUrl();
-//                    User user = new User();
-//                    user.setFull_name(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
-//                    user.setPoints(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
 
                     mUsername.setText(dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name());
                     mPoints.setText(String.valueOf(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints()));
@@ -354,10 +282,11 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 //                        }
 //                    });
 //        }
+        }
     }
 
     // Read from database when changed
-    private void checkDatabase(){
+    private void checkDatabase() {
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -377,10 +306,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 //        mRef.addListenerForSingleValueEvent();
     }
 
-//    update data
-private void writeNewPost(String userId, String username, String title, String body) {
-    // Create new post at /user-posts/$userid/$postid and at
-    // /posts/$postid simultaneously
+    //    update data
+    private void writeNewPost(String userId, String username, String title, String body) {
+        // Create new post at /user-posts/$userid/$postid and at
+        // /posts/$postid simultaneously
 //    String key = mRef.child("posts").push().getKey();
 //    Post post = new Post(userId, mUsername, title, body);
 //    Map<String, Object> postValues = post.toMap();
@@ -392,26 +321,31 @@ private void writeNewPost(String userId, String username, String title, String b
 //    mRef.updateChildren(childUpdates);
 
 
-}
+    }
 
-//order firebase databse
-    private void orderTop(){
+    //order firebase databse
+    private void orderTop() {
         Query myMostViewedPostsQuery = mRef.child("posts").orderByChild("metrics/views");
         myMostViewedPostsQuery.addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            }
 
             @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
             // TODO: implement the ChildEventListener methods as documented above
             // ...
         });
@@ -429,16 +363,20 @@ private void writeNewPost(String userId, String username, String title, String b
             }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            }
 
             @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
 
             // ...
         });
@@ -450,97 +388,31 @@ private void writeNewPost(String userId, String username, String title, String b
             }
 
             @Override
-            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildChanged(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) { }
+            public void onChildRemoved(@NonNull DataSnapshot dataSnapshot) {
+            }
 
             @Override
-            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) { }
+            public void onChildMoved(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
+            }
 
             @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) { }
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
 
         });
     }
 
-    //if client is disconected
-    private void disconected(){
-        DatabaseReference presenceRef = FirebaseDatabase.getInstance().getReference("disconnectmessage");
-// Write a string when this client loses connection
-        presenceRef.onDisconnect().setValue("I disconnected!");
-
-        // to check if disconect is attached
-
-        presenceRef.onDisconnect().removeValue(new DatabaseReference.CompletionListener() {
-            @Override
-            public void onComplete(DatabaseError error, @NonNull DatabaseReference reference) {
-                if (error != null) {
-                    Log.d("", "could not establish onDisconnect event:" + error.getMessage());
-                }
-            }
-        });
-
-        // change that i disconected
-        OnDisconnect onDisconnectRef = presenceRef.onDisconnect();
-        onDisconnectRef.setValue("I am disconnected");
-// ...
-// some time later when we change our minds
-// ...
-        onDisconnectRef.cancel();
-    }
-
-    private boolean checkConnection(){
-        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
-        connectedRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                boolean connected = snapshot.getValue(Boolean.class);
-                if (connected) {
-                    Log.d("", "connected");
-                    con(true);
-                } else {
-                    Log.d("", "not connected");
-                    con(false);
-                }
-            }
-
-            private void con(boolean connection){
-                connected = connection;
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w("", "Listener was cancelled");
-                con(false);
-            }
-        });
-        return connected;
-    }
-
-    private void timeCheck(){
-        DatabaseReference offsetRef = FirebaseDatabase.getInstance().getReference(".info/serverTimeOffset");
-        offsetRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                double offset = snapshot.getValue(Double.class);
-                double estimatedServerTimeMs = System.currentTimeMillis() + offset;
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w("", "Listener was cancelled");
-            }
-        });
-    }
-
-    private void startLocationService(){
-        if(!isLocationServiceRunning()){
+    private void startLocationService() {
+        if (!isLocationServiceRunning()) {
             Intent serviceIntent = new Intent(this, LocationService.class);
 
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 MainActivity.this.startForegroundService(serviceIntent);
-            }else{
+            } else {
                 startService(serviceIntent);
             }
         }
@@ -548,8 +420,8 @@ private void writeNewPost(String userId, String username, String title, String b
 
     private boolean isLocationServiceRunning() {
         ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)){
-            if("com.codingwithmitch.googledirectionstest.services.LocationService".equals(service.service.getClassName())) {
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if ("com.codingwithmitch.googledirectionstest.services.LocationService".equals(service.service.getClassName())) {
                 Log.d("service", "isLocationServiceRunning: location service is already running.");
                 return true;
             }
@@ -558,5 +430,26 @@ private void writeNewPost(String userId, String username, String title, String b
         return false;
     }
 
+    private boolean getLocationPermission() {
+        if (ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Constants.FINE_LOCATION},
+                    Constants.LOCATION_REQUEST_CODE);
+            return false;
+        } else {
+            return true;
+        }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case Constants.LOCATION_REQUEST_CODE: {
+                if (permissions.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    finishAffinity();
+                    System.exit(0);
+                }
+            }
+        }
+    }
 }

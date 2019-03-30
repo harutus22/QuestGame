@@ -81,11 +81,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         getLocationPermission();
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mAuth = FirebaseAuth.getInstance();
-        mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        mDatabase = FirebaseDatabase.getInstance().getReference();
-        initPoints();
+        if(locationPermission) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+            mAuth = FirebaseAuth.getInstance();
+            mLocationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+            mDatabase = FirebaseDatabase.getInstance().getReference();
+            initPoints();
+        }
     }
 
     private void initPoints() {
