@@ -1,6 +1,7 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.arch.lifecycle.Observer;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -53,19 +54,7 @@ public class ArActivity extends AppCompatActivity {
         setContentView(R.layout.activity_ar);
 
         checkPermissions();
-        addArchitectView();
-        getLocation();
-        final JSONArray jsonArray = generateCoinInformation();
-        mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
-
-    }
-
-    private void addArchitectView() {
         mArchitectView = findViewById(R.id.architectView);
-        final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
-        config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
-        config.setLicenseKey(getString(R.string.wikitude_license_key));
-        mArchitectView.onCreate(config);
 
         CoinsLiveDataProvider.mCoins.observe(this, new Observer<HashMap<String, Coin>>() {
             @Override
@@ -84,10 +73,11 @@ public class ArActivity extends AppCompatActivity {
             @Override
             public void onChanged(@Nullable LatLng latLng) {
                 myLocation = latLng;
-                final JSONArray jsonArray = generateCoinInformation();
+                final JSONArray jsonArray = generatePoiInformation();
                 mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
             }
         });
+
 
 
     }
@@ -119,6 +109,7 @@ public class ArActivity extends AppCompatActivity {
     }
 
 
+    @SuppressLint("MissingPermission")
     @Override
 
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -127,7 +118,7 @@ public class ArActivity extends AppCompatActivity {
 
         switch (requestCode) {
             case MY_CAMERA_REQUEST_CODE: {
-                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(this, "camera permission denied", Toast.LENGTH_LONG).show();
@@ -135,7 +126,7 @@ public class ArActivity extends AppCompatActivity {
                 break;
             }
             case REQUEST_FINE_LOCATION:
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                             && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         return;
@@ -172,7 +163,7 @@ public class ArActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         mArchitectView.onPause();
-    }
+}
 
     @Override
     protected void onDestroy() {
@@ -194,19 +185,18 @@ public class ArActivity extends AppCompatActivity {
             final HashMap<String, String> coinInformation = new HashMap<>();
             for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
 
-                if (myLocation != null) {
-                    LatLng latLng = myLocation;
+            if(myLocation != null) {
 
-                    double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
+                double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
 
-                    if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
-                            !stringCoinEntry.getValue().isCluster()) {
-                        coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
-                        coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
-                        coins.put(new JSONObject(coinInformation));
-                    }
+                if (SphericalUtil.computeDistanceBetween(myLocation, stringCoinEntry.getValue().getPosition()) < 15 &&
+                        !stringCoinEntry.getValue().isCluster()) {
+                    coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
+                    coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
+                    coins.put(new JSONObject(coinInformation));
                 }
             }
+        }
 
             return coins;
         }
