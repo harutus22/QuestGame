@@ -116,12 +116,11 @@ public class LocationService extends IntentService {
                         Location location = locationResult.getLastLocation();
                         double latitude = locationResult.getLastLocation().getLatitude();
                         double longitude = locationResult.getLastLocation().getLongitude();
-                        LatLng latLng = new LatLng(latitude, longitude);
 
                         if (location != null) {
                             Log.d("move", String.valueOf(latitude) + " " +
                                     String.valueOf(longitude));
-                            MyLocationLiveData.myLocation.setValue(latLng);
+                            MyLocationLiveData.myLocation.setValue(location);
                         }
 
                     }

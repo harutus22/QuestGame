@@ -99,7 +99,7 @@ public class SignUpActivity extends AppCompatActivity {
         mFullame = findViewById(R.id.fullnameSignUp);
         ready = findViewById(R.id.finishSignUp);
         button = findViewById(R.id.button);
-        userImage = findViewById(R.id.userImage);
+//        userImage = findViewById(R.id.userImage);
 
         mBirthDateField.setOnClickListener(new View.OnClickListener() {
             @Override

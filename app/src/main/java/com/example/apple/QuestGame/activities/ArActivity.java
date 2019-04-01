@@ -45,7 +45,7 @@ public class ArActivity extends AppCompatActivity {
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private Map<String, Coin> coinsData = new HashMap<>();
-    private LatLng myLocation;
+    private Location myLocation;
 
     private static final int MY_CAMERA_REQUEST_CODE = 100;
 
@@ -59,11 +59,27 @@ public class ArActivity extends AppCompatActivity {
         checkPermissions();
         mArchitectView = findViewById(R.id.architectView);
 
+        getCoins();
+        getLocation();
+    }
+
+    private void getLocation() {
+        MyLocationLiveData.myLocation.observe(this, new Observer<Location>() {
+            @Override
+            public void onChanged(@Nullable Location location) {
+                myLocation = location;
+                final JSONArray jsonArray = generatePoiInformation();
+                mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
+                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
+            }
+        });
+    }
+
+    private void getCoins() {
         CoinsLiveDataProvider.mCoins.observe(this, new Observer<HashMap<String, Coin>>() {
             @Override
             public void onChanged(@Nullable HashMap<String, Coin> coin) {
                 coinsData = coin;
-                getLocation();
 
                 final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
                 config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
@@ -71,42 +87,6 @@ public class ArActivity extends AppCompatActivity {
                 mArchitectView.onCreate(config);
             }
         });
-
-        MyLocationLiveData.myLocation.observe(this, new Observer<LatLng>() {
-            @Override
-            public void onChanged(@Nullable LatLng latLng) {
-                myLocation = latLng;
-                final JSONArray jsonArray = generatePoiInformation();
-                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
-            }
-        });
-
-
-
-    }
-
-    private void getLocation() {
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(30 * 1000)
-                .setFastestInterval(5 * 1000);
-
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()){
-                    mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                }
-            }
-        };
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-
     }
 
 
@@ -129,12 +109,7 @@ public class ArActivity extends AppCompatActivity {
             }
             case REQUEST_FINE_LOCATION:
                 if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                        }
-                    });
+                    getLocation();
                 }
         }
     }
@@ -186,7 +161,7 @@ public class ArActivity extends AppCompatActivity {
         for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
 
             if(myLocation != null) {
-                LatLng latLng = myLocation;
+                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
                 double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
 

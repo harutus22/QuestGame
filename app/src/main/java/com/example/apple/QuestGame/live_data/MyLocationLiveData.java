@@ -1,10 +1,10 @@
 package com.example.apple.QuestGame.live_data;
 
 import android.arch.lifecycle.MutableLiveData;
+import android.location.Location;
 
-import com.google.android.gms.maps.model.LatLng;
 
 
 public class MyLocationLiveData {
-    public static MutableLiveData<LatLng> myLocation = new MutableLiveData<>();
+    public static MutableLiveData<Location> myLocation = new MutableLiveData<>();
 }
