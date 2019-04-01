@@ -39,28 +39,47 @@ import java.util.Map;
 public class ArActivity extends AppCompatActivity {
 
     private static final int REQUEST_FINE_LOCATION = 200;
-    private static final int MY_CAMERA_REQUEST_CODE = 100;
+    ArchitectView mArchitectView;
 
-    private ArchitectView mArchitectView;
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private Map<String, Coin> coinsData = new HashMap<>();
-    private LatLng myLocation;
+    private Location myLocation;
 
+    private static final int MY_CAMERA_REQUEST_CODE = 100;
+
+
+
+    @SuppressLint("MissingPermission")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ar);
-
         checkPermissions();
         mArchitectView = findViewById(R.id.architectView);
 
+        getCoins();
+        getLocation();
+    }
+
+    private void getLocation() {
+        MyLocationLiveData.myLocation.observe(this, new Observer<Location>() {
+            @Override
+            public void onChanged(@Nullable Location location) {
+                myLocation = location;
+                final JSONArray jsonArray = generatePoiInformation();
+                mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
+                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
+            }
+        });
+    }
+
+    private void getCoins() {
         CoinsLiveDataProvider.mCoins.observe(this, new Observer<HashMap<String, Coin>>() {
             @Override
             public void onChanged(@Nullable HashMap<String, Coin> coin) {
                 coinsData = coin;
-                getLocation();
 
                 final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
                 config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
@@ -68,44 +87,6 @@ public class ArActivity extends AppCompatActivity {
                 mArchitectView.onCreate(config);
             }
         });
-
-        MyLocationLiveData.myLocation.observe(this, new Observer<LatLng>() {
-            @Override
-            public void onChanged(@Nullable LatLng latLng) {
-                myLocation = latLng;
-                final JSONArray jsonArray = generateCoinInformation();
-                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
-            }
-        });
-
-
-
-    }
-
-    private void getLocation() {
-
-        mLocationRequest = LocationRequest.create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(10 * 1000)
-                .setFastestInterval(5 * 1000);
-
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-                for (Location location : locationResult.getLocations()) {
-                    mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                }
-            }
-        };
-
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-        if ((ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                && (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
-            return;
-        }
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
-
     }
 
 
@@ -116,8 +97,9 @@ public class ArActivity extends AppCompatActivity {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        switch (requestCode) {
-            case MY_CAMERA_REQUEST_CODE: {
+        switch (requestCode){
+            case MY_CAMERA_REQUEST_CODE:
+            {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "camera permission granted", Toast.LENGTH_LONG).show();
                 } else {
@@ -127,16 +109,7 @@ public class ArActivity extends AppCompatActivity {
             }
             case REQUEST_FINE_LOCATION:
                 if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                            && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                        return;
-                    }
-                    mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                        }
-                    });
+                    getLocation();
                 }
         }
     }
@@ -176,20 +149,23 @@ public class ArActivity extends AppCompatActivity {
 
     }
 
+    private JSONArray generatePoiInformation() {
 
-        private JSONArray generateCoinInformation() {
+        final JSONArray coins = new JSONArray();
 
-            final JSONArray coins = new JSONArray();
-            final String ATTR_LATITUDE = "latitude";
-            final String ATTR_LONGITUDE = "longitude";
-            final HashMap<String, String> coinInformation = new HashMap<>();
-            for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
+        final String ATTR_LATITUDE = "latitude";
+        final String ATTR_LONGITUDE = "longitude";
+
+        final HashMap<String, String> coinInformation = new HashMap<>();
+
+        for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
 
             if(myLocation != null) {
+                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
                 double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
 
-                if (SphericalUtil.computeDistanceBetween(myLocation, stringCoinEntry.getValue().getPosition()) < 15 &&
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
                         !stringCoinEntry.getValue().isCluster()) {
                     coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
                     coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
@@ -198,24 +174,23 @@ public class ArActivity extends AppCompatActivity {
             }
         }
 
-            return coins;
-        }
+        return coins;
+    }
 
-        private void checkPermissions () {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                            REQUEST_FINE_LOCATION);
-                }
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (checkSelfPermission(Manifest.permission.CAMERA)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    requestPermissions(new String[]{Manifest.permission.CAMERA},
-                            MY_CAMERA_REQUEST_CODE);
-                }
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        REQUEST_FINE_LOCATION);
             }
         }
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED ) {
+                requestPermissions(new String[]{Manifest.permission.CAMERA},
+                        MY_CAMERA_REQUEST_CODE);
+            }
+        }
+    }
 
 }

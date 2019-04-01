@@ -11,9 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.Looper;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -29,6 +27,7 @@ import android.widget.Toast;
 import com.arsy.maps_library.MapRadar;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
+import com.example.apple.QuestGame.live_data.MyLocationLiveData;
 import com.example.apple.QuestGame.my_clusters.ClusterInfoViewAdapter;
 import com.example.apple.QuestGame.models.Coin;
 import com.example.apple.QuestGame.my_clusters.ClusterRenderer;
@@ -123,31 +122,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @SuppressLint("MissingPermission")
     private void getFusedLocation() {
-        fusedLocationClient.requestLocationUpdates(getLocationRequest(), new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-
-                        Location location = locationResult.getLastLocation();
-                        double latitude = locationResult.getLastLocation().getLatitude();
-                        double longitude = locationResult.getLastLocation().getLongitude();
-
-                        if (location != null) {
-                            Log.d("move", String.valueOf(latitude) + " " +
-                                    String.valueOf(longitude));
-                            addItems(location);
-                        }
-                    }
-                },
-                Looper.myLooper());
-    }
-
-    private LocationRequest getLocationRequest() {
-        LocationRequest locationRequestHighAccuracy = new LocationRequest();
-        locationRequestHighAccuracy.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequestHighAccuracy.setInterval(Constants.UPDATE_INTERVAL);
-        locationRequestHighAccuracy.setFastestInterval(Constants.FASTEST_INTERVAL);
-        locationRequestHighAccuracy.setSmallestDisplacement(Constants.DISPLACEMENT_UPDATE);
-        return locationRequestHighAccuracy;
+        MyLocationLiveData.myLocation.observe(this, new Observer<Location>() {
+            @Override
+            public void onChanged(@Nullable Location location) {
+                addItems(location);
+            }
+        });
     }
 
     @SuppressLint("MissingPermission")
