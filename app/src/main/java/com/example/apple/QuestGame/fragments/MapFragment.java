@@ -20,9 +20,9 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,7 +32,6 @@ import android.widget.Toast;
 
 import com.arsy.maps_library.MapRadar;
 import com.example.apple.QuestGame.R;
-import com.example.apple.QuestGame.activities.MainActivity;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
 import com.example.apple.QuestGame.live_data.MyLocationLiveData;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
@@ -49,6 +48,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -58,16 +58,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.clustering.ClusterManager;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringTokenizer;
 
 import static android.content.Context.LOCATION_SERVICE;
 
 public class MapFragment extends Fragment implements OnMapReadyCallback {
-
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
 
     private GoogleMap mMap;
     private boolean locationPermission = false;
@@ -158,11 +159,44 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setMyLocationEnabled(true);
+
+        setMapStyle(mMap);
+
         setUpCluster();
         zoomToMyLocation();
         getFusedLocation();
         onClusterClick();
+    }
+
+    @SuppressLint("MissingPermission")
+    private void setMapStyle(GoogleMap mMap) {
+        mMap.setMyLocationEnabled(true);
+        int morning = 5;
+        int afternoon = 13;
+        int night = 21;
+        int currentTime = getHour();
+
+        Log.d("time", String.valueOf(getHour()));
+
+        if(currentTime >= morning && currentTime < afternoon){
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_standart));
+        }
+        else if(currentTime >= afternoon && currentTime < night){
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_retro));
+        }
+        else if (currentTime >= night && currentTime < 24 || currentTime < morning){
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_night));
+        }
+    }
+
+    private int getHour(){
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
+        String formattedDate = df.format(calendar.getTime());
+        String string = TextUtils.substring(formattedDate, 0, 4);
+        StringTokenizer tokenizer = new StringTokenizer(string, ":");
+        String time = tokenizer.nextToken();
+        return Integer.valueOf(time);
     }
 
     @SuppressLint("MissingPermission")
@@ -348,15 +382,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
 
     private void setUpCluster() {
-        // Position the map.
-
-        // Initialize the manager with the context and the map.
-        // (Activity extends context, so we can pass 'this' in the constructor.)
         if (mClusterManager == null) {
             mClusterManager = new ClusterManager<>(context, mMap);
         }
-        // Point the map's listeners at the listeners implemented by the cluster
-        // manager.
+
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 

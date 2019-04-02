@@ -31,7 +31,12 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".activities.MainActivity" />
+        <activity android:name=".activities.MainActivity" >
+            <intent-filter>
+                <category android:name="android.intent.category.DEFAULT" />
+                <action android:name="android.intent.action.VIEW"/>
+            </intent-filter>
+        </activity>
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
@@ -63,25 +68,12 @@
             android:required="false" />
 
         <activity
-            android:name=".activities.MapsActivity"
-            android:label="@string/title_activity_maps">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-            </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".activities.LoginActivity"
+            android:name="com.example.apple.QuestGame.activities.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-        </activity>
-
-        <activity
-            android:name=".activities.ArActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize" >
         </activity>
 
         <service android:name=".services.LocationService"
