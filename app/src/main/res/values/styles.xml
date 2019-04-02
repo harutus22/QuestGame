@@ -30,6 +30,12 @@
         <item name="boxCornerRadiusTopEnd"> 20dp</item>
     </style>
 
+    <style name="viewTexts" parent="TextAppearance.AppCompat">
+        <item name="android:textColorHint">#ffffff</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">23sp</item>
+    </style>
+
 </resources>
 
 

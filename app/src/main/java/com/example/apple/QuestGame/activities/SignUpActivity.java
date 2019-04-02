@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
@@ -19,6 +20,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
@@ -58,6 +60,8 @@ public class SignUpActivity extends AppCompatActivity {
     private Button button;
     private String imageName = UUID.randomUUID().toString() + ".jpg";
     private FirebaseStorage storage;
+    private LinearLayout layout;
+    private Handler handler1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +71,19 @@ public class SignUpActivity extends AppCompatActivity {
         initFireBase();
         initButtons();
 
-        button.setOnClickListener(new View.OnClickListener() {
+        handler1.postDelayed(new Runnable() {
             @Override
-            public void onClick(View v) {
-                setUserImage();
+            public void run() {
+                layout.setVisibility(View.VISIBLE);
+
             }
-        });
+        },500);
+//        button.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                setUserImage();
+//            }
+//        });
 
         ready.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,24 +104,26 @@ public class SignUpActivity extends AppCompatActivity {
     private void initButtons() {
         mEmail = findViewById(R.id.emailSignUp);
         mPassword = findViewById(R.id.passwordSignUp);
-        mBirthDate = findViewById(R.id.birthdaySignUp);
+//        mBirthDate = findViewById(R.id.birthdaySignUp);
 //        mBirthDateField = findViewById(R.id.birthdaySignUpField);
         mUsername = findViewById(R.id.userNameSignUp);
         mFullame = findViewById(R.id.fullnameSignUp);
         ready = findViewById(R.id.finishSignUp);
         button = findViewById(R.id.button);
+        layout = findViewById(R.id.line15);
+        handler1 = new Handler();
 //        userImage = findViewById(R.id.userImage);
 
-        mBirthDateField.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Calendar cal = Calendar.getInstance();
-                int day = cal.get(Calendar.DAY_OF_MONTH);
-                int month = cal.get(Calendar.MONTH);
-                int year = cal.get(Calendar.YEAR);
-                datePicker(day, month, year);
-            }
-        });
+//        mBirthDateField.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Calendar cal = Calendar.getInstance();
+//                int day = cal.get(Calendar.DAY_OF_MONTH);
+//                int month = cal.get(Calendar.MONTH);
+//                int year = cal.get(Calendar.YEAR);
+//                datePicker(day, month, year);
+//            }
+//        });
     }
 
     private void signUp() {
