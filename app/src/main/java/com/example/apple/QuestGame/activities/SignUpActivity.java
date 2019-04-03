@@ -125,7 +125,7 @@ public class SignUpActivity extends AppCompatActivity {
                                 User user = new User(imageName, mFullame.getEditText().getText().toString(),
                                         mUsername.getEditText().getText().toString(),
                                         mUsername.getEditText().getText().toString(), mEmail.getEditText().toString());
-                                user.getQuests().put("child", new Quest("jdaa", "whay",23, 2166317, 3123131));
+                                user.getQuests().put("child", new Quest());
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                                 logIn();
                             } else {

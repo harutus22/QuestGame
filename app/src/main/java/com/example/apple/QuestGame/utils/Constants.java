@@ -16,4 +16,6 @@ public class Constants {
     public static final long UPDATE_INTERVAL = 5000;
     public static final long FASTEST_INTERVAL = 1000;
     public static final float DISPLACEMENT_UPDATE = 1f;
+    public static final int PERMISSION_ALL = 1;
+    public static final int MY_CAMERA_REQUEST_CODE = 100;
 }

@@ -46,12 +46,8 @@ public class CameraFragment extends Fragment {
     private static final int REQUEST_FINE_LOCATION = 200;
     ArchitectView mArchitectView;
 
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest mLocationRequest;
-    private LocationCallback mLocationCallback;
     private Map<String, Coin> coinsData = new HashMap<>();
     private Location myLocation;
-    private Context context;
 
     private static final int MY_CAMERA_REQUEST_CODE = 100;
 
@@ -80,7 +76,6 @@ public class CameraFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        this.context= context;
     }
 
     @Override
@@ -91,7 +86,6 @@ public class CameraFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        checkPermissions();
         mArchitectView = view.findViewById(R.id.architectView);
 
         getCoins();
@@ -115,11 +109,6 @@ public class CameraFragment extends Fragment {
             @Override
             public void onChanged(@Nullable HashMap<String, Coin> coin) {
                 coinsData = coin;
-
-//                final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
-//                config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
-//                config.setLicenseKey(getString(R.string.wikitude_license_key));
-//                mArchitectView.onCreate(config);
             }
         });
     }
@@ -148,18 +137,6 @@ public class CameraFragment extends Fragment {
                 }
         }
     }
-
-//    @Override
-//    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-//        super.onPostCreate(savedInstanceState);
-//        mArchitectView.onPostCreate();
-//        try {
-//            mArchitectView.load("3dModelAtGeo/index.html");
-//        } catch (IOException e) {
-//            Toast.makeText(getActivity(), getString(R.string.error_loading_ar_experience), Toast.LENGTH_SHORT).show();
-//        }
-//
-//    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -202,9 +179,6 @@ public class CameraFragment extends Fragment {
         super.onDestroy();
         mArchitectView.clearCache();
         mArchitectView.onDestroy();
-        if (mFusedLocationClient != null) {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-        }
 
     }
 
@@ -234,22 +208,5 @@ public class CameraFragment extends Fragment {
         }
 
         return coins;
-    }
-
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_FINE_LOCATION);
-            }
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context.getApplicationContext(),Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED ) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
-            }
-        }
     }
 }

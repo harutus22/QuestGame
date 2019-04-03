@@ -18,11 +18,9 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -35,7 +33,9 @@ import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
 import com.example.apple.QuestGame.live_data.MyLocationLiveData;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
+import com.example.apple.QuestGame.live_data.QuestLiveData;
 import com.example.apple.QuestGame.models.Coin;
+import com.example.apple.QuestGame.models.Quest;
 import com.example.apple.QuestGame.my_clusters.ClusterInfoViewAdapter;
 import com.example.apple.QuestGame.my_clusters.ClusterRenderer;
 import com.example.apple.QuestGame.utils.Constants;
@@ -58,13 +58,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.SphericalUtil;
 import com.google.maps.android.clustering.ClusterManager;
 
-import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.StringTokenizer;
 
 import static android.content.Context.LOCATION_SERVICE;
 
@@ -83,6 +81,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private Activity activity;
     private Context context;
     private PointsLiveData model;
+    private ArrayList<Quest> quests;
 
     public MapFragment() { }
 
@@ -98,6 +97,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         model = ViewModelProviders.of(getActivity()).get(PointsLiveData.class);
+        quests = new ArrayList<>();
     }
 
     @Override
@@ -152,6 +152,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     coins = coin;
                 }
             });
+            QuestLiveData.selected.observe(this, new Observer<Quest>() {
+                @Override
+                public void onChanged(@Nullable Quest quest) {
+                    quests.add(quest);
+                }
+            });
         }
     }
 
@@ -191,12 +197,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private int getHour(){
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat df = new SimpleDateFormat("HH:mm:ss");
-        String formattedDate = df.format(calendar.getTime());
-        String string = TextUtils.substring(formattedDate, 0, 4);
-        StringTokenizer tokenizer = new StringTokenizer(string, ":");
-        String time = tokenizer.nextToken();
-        return Integer.valueOf(time);
+        return calendar.get(Calendar.HOUR_OF_DAY);
     }
 
     @SuppressLint("MissingPermission")
@@ -296,9 +297,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 PackageManager.PERMISSION_GRANTED) {
             locationPermission = true;
             getQuests();
-        } else {
-            ActivityCompat.requestPermissions(activity, new String[]{Constants.FINE_LOCATION},
-                    Constants.LOCATION_REQUEST_CODE);
         }
     }
 
@@ -378,6 +376,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void getQuests() {
+        if(!quests.isEmpty()){
+
+        }
     }
 
 
@@ -407,8 +408,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 //        limit of area that you can move camera
         final LatLngBounds ADELAIDE = new LatLngBounds(
                 new LatLng(-35.0, 138.58), new LatLng(-34.9, 138.61));
-
-// Constrain the camera target to the Adelaide bounds.
         mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
     }
 
@@ -437,10 +436,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                             }
                         });
 //                        setInfoWindow();
-
-                        // if true, click handling stops here and do not show info view, do not move camera
-                        // you can avoid this by calling:
-                        // renderer.getMarker(clusterItem).showInfoWindow();
 
                         return false;
                     }
@@ -482,8 +477,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         String message = points.getText().toString();
         model.select(message);
     }
-
-
 }
 
 

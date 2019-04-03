@@ -238,7 +238,7 @@ public class LoginActivity extends AppCompatActivity {
                 if (!dataSnapshot.child("users").child(mAuth.getUid()).exists()) {
                     User user = new User("", task.getResult().getUser().getDisplayName(), "User",
                             task.getResult().getUser().getUid(), task.getResult().getUser().getEmail());
-                    user.getQuests().put("child", new Quest("", "", 0, 0, 0));
+                    user.getQuests().put("child", new Quest());
                     mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                 }
             }

@@ -1,22 +1,41 @@
 package com.example.apple.QuestGame.models;
 
+import android.support.annotation.NonNull;
+
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
+
 public class Quest {
 
+    private String questId;
     private String name;
     private String description;
-    private long points;
-    private long startTime;
-    private long endTime;
+    private String avatar;
+    private ArrayList<LatLng> coordinate;
+    private ArrayList<String> questions;
+    private int reward;
 
     public Quest(){
     }
 
-    public Quest(String name, String description, long points, long startTime, long endTime) {
+    public Quest(String questId, String name, String description, String avatar,
+                 ArrayList<LatLng> coordinate, ArrayList<String> questions, int reward) {
+        this.questId = questId;
         this.name = name;
         this.description = description;
-        this.points = points;
-        this.startTime = startTime;
-        this.endTime = endTime;
+        this.avatar = avatar;
+        this.coordinate = coordinate;
+        this.questions = questions;
+        this.reward = reward;
+    }
+
+    public String getQuestId() {
+        return questId;
+    }
+
+    public void setQuestId(String questId) {
+        this.questId = questId;
     }
 
     public String getName() {
@@ -35,29 +54,35 @@ public class Quest {
         this.description = description;
     }
 
-    public long getPoints() {
-        return points;
+    public String getAvatar() {
+        return avatar;
     }
 
-    public void setPoints(long points) {
-        this.points = points;
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
-    public long getStartTime() {
-        return startTime;
+    public ArrayList<LatLng> getCoordinate() {
+        return coordinate;
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    public void setCoordinate(ArrayList<LatLng> coordinate) {
+        this.coordinate = coordinate;
     }
 
-    public long getEndTime() {
-        return endTime;
+    public ArrayList<String> getQuestions() {
+        return questions;
     }
 
-    public void setEndTime(long endTime) {
-        this.endTime = endTime;
+    public void setQuestions(ArrayList<String> questions) {
+        this.questions = questions;
     }
 
+    public int getReward() {
+        return reward;
+    }
 
+    public void setReward(int reward) {
+        this.reward = reward;
+    }
 }
