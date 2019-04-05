@@ -1,7 +1,6 @@
 package com.example.apple.QuestGame.models;
 
-import android.app.Activity;
-import android.app.Application;
+
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -10,7 +9,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.util.Log;
@@ -188,6 +186,7 @@ public class Quest {
                             accepted = false;
                             finished = true;
                             popUpDialog = null;
+                            setPoints(String.valueOf(getReward() + convert(points)));
                         } else {
                             setMarker(mMap, count, fragmentManager, latLng);
                     }
@@ -223,7 +222,7 @@ public class Quest {
                             popUpDialog.setDescription(getQuestions().get(numb));
                             popUpDialog.show(fragmentManager, "pop");
                         } else {
-                            model.select(String.valueOf(convert(points) + convert(marker.getSnippet())));
+                            setPoints(String.valueOf(convert(points) + convert(marker.getSnippet())));
                             marker.remove();
 
                         }
@@ -236,6 +235,10 @@ public class Quest {
                 }
             }
         }
+    }
+
+    private void setPoints(String string){
+        model.select(string);
     }
 
     private Integer convert(String point){

@@ -301,6 +301,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         } else {
             getLocationPermission();
         }
+        passQuest();
     }
 
     private void goToMain() {
@@ -494,7 +495,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 if(!check) {
                     if(marker.getTitle().equals("quest")) {
                         quest = quests.get(Integer.valueOf(marker.getSnippet()));
-
                         if (!quest.isAccepted()) {
                             quest.setOnButtonClick(onButtonClick);
                             quest.startQuest(getFragmentManager(), mContext, getActivity());
@@ -513,13 +513,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         if(quest != null){
             quest.passQuest(mMap, getFragmentManager(), this);
             if(quest.isFinished()){
-                String point = String.valueOf(Integer.valueOf(points.getText().toString()) +
-                        quest.getReward());
-                model.select(point);
-                points.setText(point);
-                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
+                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(points.getText().toString());
+                questMarker.remove();
                 quests.remove(quest);
-//                TODO after completing quest user don't get points, FIX IT
             }
         }
     }
