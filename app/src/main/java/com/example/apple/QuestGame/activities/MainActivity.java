@@ -9,14 +9,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,7 +43,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.OnDisconnect;
 import com.google.firebase.database.ValueEventListener;
 
 
@@ -54,7 +50,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     private BottomNavigationView mBottomNavigationView;
     private GoogleSignInClient mGoogleSignInClient;
-    private boolean connected;
     private MainFragment mainFragment;
     private String userId;
     private DatabaseReference mRef;
@@ -95,8 +90,8 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         mRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                name = dataSnapshot.child("users").child(userId).getValue(User.class).getUser_name();
-                point = String.valueOf(dataSnapshot.child("users").child(userId).getValue(User.class).getPoints());
+                name = dataSnapshot.child("users").child(userId).child("user_name").getValue(String.class);
+                point = String.valueOf(dataSnapshot.child("users").child(userId).child("points").getValue(String.class));
                 FragmentTransaction fragmentManager = getSupportFragmentManager().beginTransaction();
                 mainFragment = MainFragment.newInstance(name, point);
                 fragmentManager.add(R.id.placeHolder, mainFragment);

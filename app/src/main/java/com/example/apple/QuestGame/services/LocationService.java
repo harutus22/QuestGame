@@ -167,22 +167,25 @@ public class LocationService extends IntentService {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 GenericTypeIndicator<ArrayList<String>> ques = new GenericTypeIndicator<ArrayList<String>>() {};
                 for (DataSnapshot dataSnapshot1 : dataSnapshot.child("quest").getChildren()){
+
                     String questId = dataSnapshot1.getKey();
                     String avatar = dataSnapshot1.child("avatar").getValue(String.class);
-                    String description = dataSnapshot1.child("description").getValue(String.class);
-                    String name = dataSnapshot1.child("name").getValue(String.class);
-                    int reward = dataSnapshot1.child("reward").getValue(Integer.class);
-                    ArrayList<String> questions = dataSnapshot1.child("questions").getValue(ques);
-                    ArrayList<LatLng> coordinates = new ArrayList<>();
-                    for(DataSnapshot coordinate: dataSnapshot1.child("locations").getChildren()){
-                        Double latitude = coordinate.child("latitude").getValue(Double.class);
-                        Double longitude = coordinate.child("longitude").getValue(Double.class);
-                        LatLng latLng = new LatLng(latitude, longitude);
-                        coordinates.add(latLng);
+                        String description = dataSnapshot1.child("description").getValue(String.class);
+                        String name = dataSnapshot1.child("name").getValue(String.class);
+                        int reward = dataSnapshot1.child("reward").getValue(Integer.class);
+                        ArrayList<String> questions = dataSnapshot1.child("questions").getValue(ques);
+                        ArrayList<LatLng> coordinates = new ArrayList<>();
+                        for (DataSnapshot coordinate : dataSnapshot1.child("locations").getChildren()) {
+                            Double latitude = coordinate.child("latitude").getValue(Double.class);
+                            Double longitude = coordinate.child("longitude").getValue(Double.class);
+                            LatLng latLng = new LatLng(latitude, longitude);
+                            coordinates.add(latLng);
+                        }
+                        Quest quest = new Quest(questId, name, description, avatar, coordinates, questions, reward);
+                        QuestLiveData.selected.setValue(quest);
+                    if(!checkImageAvailability(avatar)) {
+                        saveImage(avatar);
                     }
-                    Quest quest = new Quest(questId, name, description, avatar, coordinates, questions, reward);
-                    QuestLiveData.selected.setValue(quest);
-                    saveImage(avatar);
                 }
             }
             @Override
@@ -207,11 +210,10 @@ public class LocationService extends IntentService {
         });
     }
 
-    private void saveImageToStorage(Bitmap bmp, String string)
+    private void saveImageToStorage(Bitmap bmp, String imageName)
     {
-        String path = Environment.getExternalStorageDirectory().toString();
+        File file = getFile(imageName);
         OutputStream fOut = null;
-        File file = new File(path, string + ".png");
         try {
             fOut = new FileOutputStream(file);
         } catch (FileNotFoundException e) {
@@ -225,5 +227,15 @@ public class LocationService extends IntentService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private File getFile(String imageName){
+        String path = Environment.getExternalStorageDirectory().toString();
+        return new File(path, imageName + ".png");
+    }
+
+    private boolean checkImageAvailability(String imageNAme){
+        File file = getFile(imageNAme);
+        return file.exists();
     }
 }

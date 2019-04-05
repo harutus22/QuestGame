@@ -10,7 +10,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -22,7 +21,6 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.maps.android.MarkerManager;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
@@ -115,7 +113,6 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
         animator.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationEnd(Animator animator) {
-                Log.d("animation", "working");
             }
             @Override public void onAnimationStart(Animator animator) {
             }
@@ -125,7 +122,5 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
         });
         ((ObjectAnimator) animator).setRepeatCount(Animation.INFINITE);
         animator.setDuration(5000).start();
-
     }
-
 }

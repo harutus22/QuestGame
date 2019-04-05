@@ -11,10 +11,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,6 +41,7 @@ import com.example.apple.QuestGame.models.Coin;
 import com.example.apple.QuestGame.models.Quest;
 import com.example.apple.QuestGame.my_clusters.ClusterInfoViewAdapter;
 import com.example.apple.QuestGame.my_clusters.ClusterRenderer;
+import com.example.apple.QuestGame.utils.BitmapResize;
 import com.example.apple.QuestGame.utils.Constants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -46,9 +50,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -79,9 +86,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private TextView points;
     private LocationManager mLocationManager;
     private Activity activity;
-    private Context context;
+    private Context mContext;
     private PointsLiveData model;
     private ArrayList<Quest> quests;
+    private Quest quest;
+    private Marker marker;
+    private boolean check;
 
     public MapFragment() { }
 
@@ -101,10 +111,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         activity = getActivity();
-        context = getContext();
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
@@ -122,6 +131,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onAttach(Context context) {
         mLocationManager = (LocationManager) context.getSystemService(LOCATION_SERVICE);
+        mContext = context;
         super.onAttach(context);
     }
 
@@ -145,19 +155,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.map);
         if (mapFragment != null) {
-            mapFragment.getMapAsync(this);
             CoinsLiveDataProvider.mCoins.observe(this, new Observer<HashMap<String, Coin>>() {
                 @Override
                 public void onChanged(@Nullable HashMap<String, Coin> coin) {
                     coins = coin;
                 }
             });
-            QuestLiveData.selected.observe(this, new Observer<Quest>() {
-                @Override
-                public void onChanged(@Nullable Quest quest) {
-                    quests.add(quest);
-                }
-            });
+            mapFragment.getMapAsync(this);
         }
     }
 
@@ -165,13 +169,29 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
+        getQuests();
         setMapStyle(mMap);
-
         setUpCluster();
         zoomToMyLocation();
         getFusedLocation();
         onClusterClick();
+        initQuests();
+        onMarkerClick();
+        passQuest();
+    }
+
+    private void initQuests() {
+        QuestLiveData.selected.observe(this, new Observer<Quest>() {
+            @Override
+            public void onChanged(@Nullable Quest quest) {
+                quests.add(quest);
+                String photoPath = Environment.getExternalStorageDirectory() + "/" + quest.getAvatar() + ".png";
+                Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
+                marker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
+                        (BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(bitmap))).
+                        title("Quest").snippet(String.valueOf(quests.indexOf(quest))));
+            }
+        });
     }
 
     @SuppressLint("MissingPermission")
@@ -182,16 +202,14 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         int night = 21;
         int currentTime = getHour();
 
-        Log.d("time", String.valueOf(getHour()));
-
         if(currentTime >= morning && currentTime < afternoon){
-            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_standart));
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_standart));
         }
         else if(currentTime >= afternoon && currentTime < night){
-            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_retro));
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_retro));
         }
         else if (currentTime >= night && currentTime < 24 || currentTime < morning){
-            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style_night));
+            mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_night));
         }
     }
 
@@ -218,14 +236,13 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             mClusterManager.addItem(coin);
             mClusterManager.cluster();
             Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(true);
-            Log.d("location", "100m");
         } else if (SphericalUtil.computeDistanceBetween(latLng, coin.getPosition()) > 100 && coin.isCluster()) {
             mClusterManager.removeItem(coin);
             mClusterManager.cluster();
             try {
                 Objects.requireNonNull(coins.get(coin.getTitle())).setCluster(false);
             } catch (NullPointerException o) {
-                Log.d("true-false", "catched");
+                Log.d("cluster remov", o.getMessage());
             }
         }
     }
@@ -245,7 +262,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         Location location = getLastLocation();
         if (mapRadar == null) {
             LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-            mapRadar = new MapRadar(mMap, latLng, getContext());
+            mapRadar = new MapRadar(mMap, latLng, mContext);
         }
         mapRadar.withDistance(100);
         mapRadar.withOuterCircleStrokeColor(0xfccd29);
@@ -272,7 +289,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public void onResume() {
         super.onResume();
         if (locationPermission && checkMapServices()) {
-            getQuests();
             if (coins.isEmpty()) {
                 addItems(getLastLocation());
             }
@@ -280,6 +296,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 initMap();
             } else {
                 initRadar();
+                getQuests();
             }
         } else {
             getLocationPermission();
@@ -287,16 +304,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void goToMain() {
-        FragmentTransaction fragmentManager = getFragmentManager().beginTransaction();
+        FragmentTransaction fragmentManager = Objects.requireNonNull(getFragmentManager()).beginTransaction();
         fragmentManager.replace(R.id.placeHolder, new MainFragment());
         fragmentManager.commit();
     }
 
     private void getLocationPermission() {
-        if (ContextCompat.checkSelfPermission(context.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
+        if (ContextCompat.checkSelfPermission(mContext.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             locationPermission = true;
-            getQuests();
         }
     }
 
@@ -310,7 +326,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                     available, Constants.ERROR_DIALOG_REQUEST);
             dialog.show();
         } else {
-            Toast.makeText(context, "You can not make map requests", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "You can not make map requests", Toast.LENGTH_LONG).show();
         }
         return false;
     }
@@ -324,7 +340,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void noGpsMessage() {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
         builder.setMessage("This app requires GPS turned on, do you want to enable it?")
                 .setCancelable(false).setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             @Override
@@ -377,21 +393,26 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void getQuests() {
         if(!quests.isEmpty()){
-
+            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+                @Override
+                public boolean onMarkerClick(Marker marker) {
+                    return false;
+                }
+            });
         }
     }
 
 
     private void setUpCluster() {
         if (mClusterManager == null) {
-            mClusterManager = new ClusterManager<>(context, mMap);
+            mClusterManager = new ClusterManager<>(mContext, mMap);
         }
 
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
 
         if (mClusterRenderer == null) {
-            mClusterRenderer = new ClusterRenderer(context, mMap, mClusterManager);
+            mClusterRenderer = new ClusterRenderer(mContext, mMap, mClusterManager);
             mClusterManager.setRenderer(mClusterRenderer);
             mClusterManager.setAnimation(true);
         }
@@ -445,7 +466,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private void setInfoWindow() {
         // when cluster clicked opens window with short description
         mClusterManager.getMarkerCollection()
-                .setOnInfoWindowAdapter(new ClusterInfoViewAdapter(LayoutInflater.from(context)));
+                .setOnInfoWindowAdapter(new ClusterInfoViewAdapter(LayoutInflater.from(mContext)));
 
         mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
         onClusterWindowClick();
@@ -457,7 +478,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 new ClusterManager.OnClusterItemInfoWindowClickListener<Coin>() {
                     @Override
                     public void onClusterItemInfoWindowClick(Coin stringClusterItem) {
-                        Toast.makeText(context, "Clicked info window: " + stringClusterItem.getTitle(),
+                        Toast.makeText(mContext, "Clicked info window: " + stringClusterItem.getTitle(),
                                 Toast.LENGTH_SHORT).show();
                     }
                 });
@@ -468,7 +489,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onStop() {
         super.onStop();
-        if ( mapRadar != null && mapRadar.isAnimationRunning()) {
+        if (mapRadar != null && mapRadar.isAnimationRunning()) {
             mapRadar.stopRadarAnimation();
         }
         for (Map.Entry<String, Coin> stringCoinEntry : coins.entrySet()) {
@@ -477,6 +498,52 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         String message = points.getText().toString();
         model.select(message);
     }
+
+    public void onMarkerClick() {
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                if(!check) {
+                    quest = quests.get(Integer.valueOf(marker.getSnippet()));
+                    if (!quest.isAccepted()) {
+                        quest.setOnButtonClick(onButtonClick);
+                        quest.startQuest(getFragmentManager(), mContext);
+                    }
+                }else {
+                    passQuest();
+                }
+                return false;
+            }
+        });
+    }
+
+    private void passQuest(){
+        if(quest != null){
+            quest.passQuest(mMap, getFragmentManager(), this);
+            if(quest.isFinished()){
+                String point = String.valueOf(Integer.valueOf(points.getText().toString()) +
+                        quest.getReward());
+                model.select(point);
+                points.setText(point);
+                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
+                quests.remove(quest);
+//                TODO after completing quest user don't get points, FIX IT
+            }
+        }
+    }
+
+    private Quest.OnButtonClick onButtonClick = new Quest.OnButtonClick() {
+        @Override
+        public void onClick(View view) {
+            quest.setAccepted(true);
+            quest.setZero(true);
+            check = true;
+            quest.setCount(quest.getCount() + 1);
+            marker.remove();
+            passQuest();
+        }
+    };
+
 }
 
 

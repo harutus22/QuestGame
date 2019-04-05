@@ -100,7 +100,6 @@ public class MainFragment extends Fragment {
                 }
             });
         }
-
     }
 
     private void init(View container) {

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="60dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#62def8">
+
+    <ImageView
+        android:id="@+id/pop_up_quest_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginStart="10dp"
+        android:src="@drawable/space_invaders"
+        />
+
+    <TextView
+        android:id="@+id/pop_up_text_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="25sp"
+        app:layout_constraintStart_toEndOf="@id/pop_up_quest_image"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="10dp"
+        android:text="This is a popup window."/>
+
+    <TextView
+        android:id="@+id/pop_up_text_description"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Description"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pop_up_text_title"/>
+    <Button
+        android:id="@+id/pop_up_quest_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Lets Rock"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/pop_up_text_description"/>
+
+</android.support.constraint.ConstraintLayout>
