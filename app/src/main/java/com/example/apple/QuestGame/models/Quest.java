@@ -1,18 +1,23 @@
 package com.example.apple.QuestGame.models;
 
-import android.arch.lifecycle.Lifecycle;
+import android.app.Activity;
+import android.app.Application;
 import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 
 import com.example.apple.QuestGame.live_data.MyLocationLiveData;
+import com.example.apple.QuestGame.live_data.PointsLiveData;
 import com.example.apple.QuestGame.utils.PopUpDialog;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.utils.BitmapResize;
@@ -38,9 +43,11 @@ public class Quest {
     private Context mContext;
     private Bitmap icon;
     private OnButtonClick onButtonClick;
-    private Marker marker;
+    private Marker questMarker;
     private int count = 0;
-    private boolean accepted, zero, first, second, third, fourth, fifth, sixth, finished;
+    private boolean accepted, zero, finished;
+    private PointsLiveData model;
+    private String points;
 
     public Quest() {
     }
@@ -140,7 +147,7 @@ public class Quest {
         return accepted;
     }
 
-    public void startQuest(FragmentManager fragmentManager, Context context) {
+    public void startQuest(FragmentManager fragmentManager, Context context, FragmentActivity activity) {
         if(popUpDialog == null){
            popUpDialog = new PopUpDialog();
         }
@@ -149,6 +156,13 @@ public class Quest {
         popUpDialog.setDescription(getDescription());
         popUpDialog.show(fragmentManager,"pop");
         popUpDialog.setOnButtonClick(buttonClick);
+        model = ViewModelProviders.of(activity).get(PointsLiveData.class);
+        model.getSelected().observe(activity, new Observer<String>() {
+            @Override
+            public void onChanged(@Nullable String s) {
+                points = s;
+            }
+        });
     }
 
     public void passQuest(final GoogleMap mMap, final FragmentManager fragmentManager, LifecycleOwner lifecycle){
@@ -170,24 +184,10 @@ public class Quest {
                         if (count == 1) {
                             setMarker(mMap, count, fragmentManager, latLng);
                         }
-
-//                        } else if (count == 2) {
-////                            removeMarker();
-//                            setMarker(mMap, 2, fragmentManager, latLng);
-//                        } else if (count == 3) {
-////                            removeMarker();
-//                            setMarker(mMap, 3, fragmentManager, latLng);
-//                        } else if (count == 4) {
-////                            removeMarker();
-//                            setMarker(mMap, 4, fragmentManager, latLng);
-//                        } else if (count == 5) {
-////                            removeMarker();
-//                            setMarker(mMap, 5, fragmentManager, latLng);
-//                        }
                         else if (count == 6) {
-//                            removeMarker();
                             accepted = false;
                             finished = true;
+                            popUpDialog = null;
                         } else {
                             setMarker(mMap, count, fragmentManager, latLng);
                     }
@@ -198,47 +198,59 @@ public class Quest {
     }
 
     private void setMarker(GoogleMap mMap, int number, final FragmentManager fragmentManager, LatLng latLng){
-        if(marker == null) {
+        if(questMarker == null) {
             popUpDialog.setDescription(getQuestions().get(number - 1));
             if(!popUpDialog.isRemoving()) {
 //                popUpDialog.show(fragmentManager, "pop");
             }
-            marker = mMap.addMarker(new MarkerOptions().
+            questMarker = mMap.addMarker(new MarkerOptions().
                     icon(BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(icon))).
-                    position(getCoordinate().get(number)));
-            marker.setVisible(false);
+                    position(getCoordinate().get(number)).title(getName()));
+            questMarker.setVisible(false);
         } else {
             if (checkDistance(latLng)) {
-                if(!marker.isVisible()) {
-                    marker.setVisible(true);
+                if(!questMarker.isVisible()) {
+                    questMarker.setVisible(true);
                 }
                 final int numb = number;
                 mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
                     @Override
                     public boolean onMarkerClick(Marker marker) {
-                        count++;
-                        removeMarker();
-                        popUpDialog.setDescription(getQuestions().get(numb));
-                        popUpDialog.show(fragmentManager, "pop");
+                        Log.d("mark", marker.getTitle());
+                        if (marker.getTitle() != null && marker.getTitle().equals("Introductive Quest")) {
+                            count++;
+                            removeMarker(marker);
+                            popUpDialog.setDescription(getQuestions().get(numb));
+                            popUpDialog.show(fragmentManager, "pop");
+                        } else {
+                            model.select(String.valueOf(convert(points) + convert(marker.getSnippet())));
+                            marker.remove();
+
+                        }
                         return false;
                     }
                 });
             } else {
-                if(marker.isVisible()) {
-                    marker.setVisible(false);
+                if(questMarker.isVisible()) {
+                    questMarker.setVisible(false);
                 }
             }
         }
     }
 
+    private Integer convert(String point){
+        return Integer.valueOf(point);
+    }
+
     private boolean checkDistance(LatLng myLocation){
-        int a = (int) SphericalUtil.computeDistanceBetween(myLocation, coordinate.get(count));
         return SphericalUtil.computeDistanceBetween(myLocation, coordinate.get(count)) < 15;
     }
 
-    private void removeMarker(){
-        marker.remove();
-        marker = null;
+    private void removeMarker(Marker marker){
+        if(marker != null) {
+            marker.remove();
+            questMarker = null;
+        }
     }
 
     public interface OnButtonClick{

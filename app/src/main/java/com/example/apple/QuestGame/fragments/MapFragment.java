@@ -90,7 +90,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private PointsLiveData model;
     private ArrayList<Quest> quests;
     private Quest quest;
-    private Marker marker;
+    private Marker questMarker;
     private boolean check;
 
     public MapFragment() { }
@@ -174,7 +174,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         setUpCluster();
         zoomToMyLocation();
         getFusedLocation();
-        onClusterClick();
+//        onClusterClick();
         initQuests();
         onMarkerClick();
         passQuest();
@@ -187,9 +187,9 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
                 quests.add(quest);
                 String photoPath = Environment.getExternalStorageDirectory() + "/" + quest.getAvatar() + ".png";
                 Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
-                marker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
+                questMarker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
                         (BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(bitmap))).
-                        title("Quest").snippet(String.valueOf(quests.indexOf(quest))));
+                        title("quest").snippet(String.valueOf(quests.indexOf(quest))));
             }
         });
     }
@@ -393,12 +393,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void getQuests() {
         if(!quests.isEmpty()){
-            mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
-                @Override
-                public boolean onMarkerClick(Marker marker) {
-                    return false;
-                }
-            });
+
         }
     }
 
@@ -432,35 +427,28 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mMap.setLatLngBoundsForCameraTarget(ADELAIDE);
     }
 
-    private void onClusterClick() {
-        mClusterManager.setOnClusterItemClickListener(
-                new ClusterManager.OnClusterItemClickListener<Coin>() {
-                    @Override
-                    public boolean onClusterItemClick(final Coin clusterItem) {
+    private void onClusterClick(final Marker marker) {
+        points.setText(String.valueOf(Integer.valueOf(points.getText().toString()) +
+                Integer.valueOf(marker.getSnippet())));
+        final Coin clusterItem = coins.get(marker.getTitle());
 
-                        points.setText(String.valueOf(Integer.valueOf(points.getText().toString()) +
-                                Integer.valueOf(clusterItem.getSnippet())));
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if(!marker.getTitle().equals("quest")) {
+                    int point = Integer.valueOf(points.getText().toString());
+                    mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
+                    coins.remove(clusterItem.getTitle());
+                    mClusterManager.removeItem(clusterItem);
+                    mClusterManager.cluster();
+                }
+            }
 
-                        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                                int point = Integer.valueOf(points.getText().toString());
-                                mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
-                                coins.remove(clusterItem.getTitle());
-                                mClusterManager.removeItem(clusterItem);
-                                mClusterManager.cluster();
-                            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
 
-                            @Override
-                            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-                            }
-                        });
-//                        setInfoWindow();
-
-                        return false;
-                    }
-                });
+            }
+        });
     }
 
     private void setInfoWindow() {
@@ -504,14 +492,18 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public boolean onMarkerClick(Marker marker) {
                 if(!check) {
-                    quest = quests.get(Integer.valueOf(marker.getSnippet()));
-                    if (!quest.isAccepted()) {
-                        quest.setOnButtonClick(onButtonClick);
-                        quest.startQuest(getFragmentManager(), mContext);
+                    if(marker.getTitle().equals("quest")) {
+                        quest = quests.get(Integer.valueOf(marker.getSnippet()));
+
+                        if (!quest.isAccepted()) {
+                            quest.setOnButtonClick(onButtonClick);
+                            quest.startQuest(getFragmentManager(), mContext, getActivity());
+                        }
                     }
                 }else {
                     passQuest();
                 }
+                onClusterClick(marker);
                 return false;
             }
         });
@@ -539,7 +531,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             quest.setZero(true);
             check = true;
             quest.setCount(quest.getCount() + 1);
-            marker.remove();
+            questMarker.remove();
             passQuest();
         }
     };

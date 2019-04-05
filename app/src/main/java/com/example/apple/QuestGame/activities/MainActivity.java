@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 name = dataSnapshot.child("users").child(userId).child("user_name").getValue(String.class);
-                point = String.valueOf(dataSnapshot.child("users").child(userId).child("points").getValue(String.class));
+                point = String.valueOf(dataSnapshot.child("users").child(userId).child("points").getValue(Long.class));
                 FragmentTransaction fragmentManager = getSupportFragmentManager().beginTransaction();
                 mainFragment = MainFragment.newInstance(name, point);
                 fragmentManager.add(R.id.placeHolder, mainFragment);
