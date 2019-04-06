@@ -4,11 +4,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.apple.QuestGame.R;
@@ -20,6 +20,7 @@ public class PopUpDialog extends DialogFragment {
     private String title;
     private String description;
     private Button start;
+    private ImageView close;
     private OnButtonClick onButtonClick;
     private boolean questStarted;
 
@@ -58,14 +59,6 @@ public class PopUpDialog extends DialogFragment {
         if(questStarted){
             start.setVisibility(View.GONE);
         }
-//        start.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                onButtonClick.onClick(v);
-//                change();
-//                start.setVisibility(View.GONE);
-//            }
-//        });
     }
 
     @Override
@@ -78,12 +71,19 @@ public class PopUpDialog extends DialogFragment {
                 change();
             }
         });
+        close.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dismiss();
+            }
+        });
     }
 
     private void initViews(View view){
         viewTitle = view.findViewById(R.id.pop_up_text_title);
         viewDescription = view.findViewById(R.id.pop_up_text_description);
         start = view.findViewById(R.id.pop_up_quest_start);
+        close = view.findViewById(R.id.pop_close);
     }
 
     private void change(){

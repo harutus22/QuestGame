@@ -16,6 +16,7 @@ import android.view.View;
 
 import com.example.apple.QuestGame.live_data.MyLocationLiveData;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
+import com.example.apple.QuestGame.utils.PopUpCongrats;
 import com.example.apple.QuestGame.utils.PopUpDialog;
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.utils.BitmapResize;
@@ -199,9 +200,6 @@ public class Quest {
     private void setMarker(GoogleMap mMap, int number, final FragmentManager fragmentManager, LatLng latLng){
         if(questMarker == null) {
             popUpDialog.setDescription(getQuestions().get(number - 1));
-            if(!popUpDialog.isRemoving()) {
-//                popUpDialog.show(fragmentManager, "pop");
-            }
             questMarker = mMap.addMarker(new MarkerOptions().
                     icon(BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(icon))).
                     position(getCoordinate().get(number)).title(getName()));
@@ -217,10 +215,18 @@ public class Quest {
                     public boolean onMarkerClick(Marker marker) {
                         Log.d("mark", marker.getTitle());
                         if (marker.getTitle() != null && marker.getTitle().equals("Introductive Quest")) {
-                            count++;
-                            removeMarker(marker);
-                            popUpDialog.setDescription(getQuestions().get(numb));
-                            popUpDialog.show(fragmentManager, "pop");
+                            if(count != 5) {
+                                count++;
+                                removeMarker(marker);
+                                popUpDialog.setDescription(getQuestions().get(numb));
+                                popUpDialog.show(fragmentManager, "pop");
+                            } else {
+                                count++;
+                                removeMarker(marker);
+                                PopUpCongrats popUpCongrats = new PopUpCongrats();
+                                popUpCongrats.setReward(String.valueOf(getReward()));
+                                popUpCongrats.show(fragmentManager, "pop");
+                            }
                         } else {
                             setPoints(String.valueOf(convert(points) + convert(marker.getSnippet())));
                             marker.remove();

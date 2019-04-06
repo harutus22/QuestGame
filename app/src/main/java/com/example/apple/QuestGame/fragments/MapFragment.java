@@ -174,7 +174,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         setUpCluster();
         zoomToMyLocation();
         getFusedLocation();
-//        onClusterClick();
         initQuests();
         onMarkerClick();
         passQuest();

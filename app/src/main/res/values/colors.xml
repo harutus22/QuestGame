@@ -22,6 +22,9 @@
     <color name="violet"> #762dd4</color>
     <color name="white"> #ffffff</color>
     <color name="login_text_shadow"> #f8f8f8</color>
+    <color name="questPopUpGreenLight"> #abffc0</color>
+    <color name="questPopUpGreen"> #247b37</color>
+    <color name="questPopGreenMed"> #3eb959</color>
 
     
 </resources>
