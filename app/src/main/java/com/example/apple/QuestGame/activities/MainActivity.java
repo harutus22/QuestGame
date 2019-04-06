@@ -26,6 +26,7 @@ import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.fragments.CameraFragment;
 import com.example.apple.QuestGame.fragments.MainFragment;
 import com.example.apple.QuestGame.fragments.MapFragment;
+import com.example.apple.QuestGame.fragments.SettingsFragment;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
 import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.services.LocationService;
@@ -154,6 +155,13 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
             case R.id.action_play: {
                 fragmentManager.replace(R.id.placeHolder, new CameraFragment());
+                fragmentManager.commit();
+            }
+            break;
+
+            case R.id.action_settings:{
+                SettingsFragment settingsFragment = SettingsFragment.newInstance(name, point);
+                fragmentManager.replace(R.id.placeHolder, settingsFragment);
                 fragmentManager.commit();
             }
         }

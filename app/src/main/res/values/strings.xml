@@ -34,5 +34,12 @@
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="congrats_words">You have made it!!!\nTake your reward</string>
     <string name="congratulations">Congratulations</string>
+    <string name="dollar_sign">$</string>
+    <string name="setting_rank">Rank:</string>
+    <string name="settings_title">Wanted</string>
+    <string name="settings_reward">Reward</string>
+    <string name="settings_edit">Edit</string>
+    <string name="settings_ranks">Ranks</string>
+    <string name="settings_sign_out">Sign Out</string>
 
 </resources>

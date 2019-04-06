@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/wanted"
+    tools:context=".fragments.SettingsFragment">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="50dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.2"
+            android:fontFamily="@font/carnevalee_freakshow"
+            android:text="@string/settings_title"
+            android:textAlignment="center"
+            android:textSize="60sp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_gravity="center">
+
+            <ImageView
+                android:layout_marginStart="20dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/point_right"
+                android:layout_gravity="bottom"/>
+
+            <TextView
+                android:id="@+id/settings_user_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="Username"
+                android:textAlignment="center"
+                android:textSize="40sp" />
+
+            <ImageView
+                android:layout_marginEnd="20dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/point_left"
+                android:layout_gravity="bottom"/>
+        </LinearLayout>
+
+
+
+        <ImageView
+            android:id="@+id/settings_user_image"
+            android:layout_width="match_parent"
+            android:layout_height="128dp"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/cowboy" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/carnevalee_freakshow"
+            android:text="@string/settings_reward"
+            android:textAlignment="center"
+            android:textSize="60sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="20dp"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="@string/dollar_sign"
+                android:textSize="50sp" />
+
+            <TextView
+                android:id="@+id/settings_user_points"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="4521"
+                android:textAlignment="center"
+                android:textSize="60sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="@string/dollar_sign"
+                android:textSize="50sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="@string/setting_rank"
+                android:textAlignment="center"
+                android:textSize="40sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/carnevalee_freakshow"
+                android:text="1"
+                android:textAlignment="center"
+                android:textSize="40sp" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="25dp"
+            android:layout_weight="0.1">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:text="@string/settings_edit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5" />
+
+                <Button
+                    android:text="@string/settings_ranks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5" />
+
+                <Button
+                    android:text="@string/settings_sign_out"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="0.5" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+
+</FrameLayout>
