@@ -155,18 +155,21 @@
                 android:orientation="horizontal">
 
                 <Button
+                    android:id="@+id/settings_btn_edit"
                     android:text="@string/settings_edit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5" />
 
                 <Button
+                    android:id="@+id/settings_btn_rank"
                     android:text="@string/settings_ranks"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5" />
 
                 <Button
+                    android:id="@+id/settings_btn_sign_out"
                     android:text="@string/settings_sign_out"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

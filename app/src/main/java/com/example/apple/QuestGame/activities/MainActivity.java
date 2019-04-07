@@ -50,7 +50,6 @@ import com.google.firebase.database.ValueEventListener;
 public class MainActivity extends AppCompatActivity implements BottomNavigationView.OnNavigationItemSelectedListener {
 
     private BottomNavigationView mBottomNavigationView;
-    private GoogleSignInClient mGoogleSignInClient;
     private MainFragment mainFragment;
     private String userId;
     private DatabaseReference mRef;
@@ -67,10 +66,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getPermissions();
         setContentView(R.layout.activity_main);
         model = ViewModelProviders.of(this).get(PointsLiveData.class);
         init();
-        getPermissions();
     }
 
     private void getPermissions() {
@@ -168,55 +167,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         return true;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.option_menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        String check = "";
-        switch (item.getItemId()) {
-            case R.id.logOut: {
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    for (UserInfo profile : user.getProviderData()) {
-                        check = profile.getProviderId();
-                        Toast.makeText(this, check, Toast.LENGTH_LONG).show();
-                    }
-                }
-
-                if (check.equals("facebook.com")) {
-                    signOut();
-                    LoginManager.getInstance().logOut();
-                } else if (check.equals("google.com")) {
-                    GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                            .requestIdToken(getString(R.string.google_id_client))
-                            .requestEmail().requestId().requestProfile()
-                            .build();
-
-                    mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
-                    mGoogleSignInClient.revokeAccess().addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            signOut();
-                            LoginManager.getInstance().logOut();
-                        }
-                    });
-                } else if (check.equals("password")) {
-                    signOut();
-                }
-                finish();
-            }
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    private void signOut() {
-        FirebaseAuth.getInstance().signOut();
-    }
 
 
     private void getUserInfo() {

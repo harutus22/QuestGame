@@ -14,11 +14,23 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.activities.LoginActivity;
 import com.example.apple.QuestGame.utils.Constants;
+import com.facebook.login.LoginManager;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserInfo;
 
 import static android.app.Activity.RESULT_OK;
 import static android.support.v4.content.ContextCompat.checkSelfPermission;
@@ -32,6 +44,9 @@ public class SettingsFragment extends Fragment {
     private String mPoints;
     private TextView mUserNameView, mPointsView;
     private ImageView mUserImage;
+    private GoogleSignInClient mGoogleSignInClient;
+    private Context mContext;
+    private Button mSignOut, mRanks, mEdit;
 
 
     public SettingsFragment() { }
@@ -65,11 +80,13 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         init(view);
         setViews();
+        btnClick();
     }
 
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
+        mContext = context;
     }
 
     @Override
@@ -81,6 +98,24 @@ public class SettingsFragment extends Fragment {
         mUserNameView = view.findViewById(R.id.settings_user_name);
         mPointsView = view.findViewById(R.id.settings_user_points);
         mUserImage = view.findViewById(R.id.settings_user_image);
+        mEdit = view.findViewById(R.id.settings_btn_edit);
+        mRanks = view.findViewById(R.id.settings_btn_rank);
+        mSignOut = view.findViewById(R.id.settings_btn_sign_out);
+    }
+
+    private void btnClick(){
+        mSignOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                logOut();
+            }
+        });
+        mEdit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+            }
+        });
     }
 
     private void setViews(){
@@ -94,7 +129,7 @@ public class SettingsFragment extends Fragment {
 
     private void onOpenGalleryClick() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.IMAGE_REQUEST);
             } else {
                 getPhoto();
@@ -128,5 +163,48 @@ public class SettingsFragment extends Fragment {
                 mUserImage.setImageURI(imageDataUri);
             }
         }
+    }
+
+    private void logOut() {
+        String check = "";
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            for (UserInfo profile : user.getProviderData()) {
+                check = profile.getProviderId();
+                Toast.makeText(getContext(), check, Toast.LENGTH_LONG).show();
+            }
+        }
+
+        switch (check) {
+            case "facebook.com":
+                signOut();
+                LoginManager.getInstance().logOut();
+                break;
+            case "google.com":
+                GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                        .requestIdToken(getString(R.string.google_id_client))
+                        .requestEmail().requestId().requestProfile()
+                        .build();
+
+                mGoogleSignInClient = GoogleSignIn.getClient(mContext, gso);
+                mGoogleSignInClient.revokeAccess().addOnCompleteListener(getActivity(), new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        signOut();
+                        LoginManager.getInstance().logOut();
+                    }
+                });
+                break;
+            case "password":
+                signOut();
+                break;
+        }
+    }
+
+
+    private void signOut() {
+        FirebaseAuth.getInstance().signOut();
+        Intent intent = new Intent(mContext, LoginActivity.class);
+        startActivity(intent);
     }
 }

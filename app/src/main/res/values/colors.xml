@@ -26,5 +26,10 @@
     <color name="questPopUpGreen"> #247b37</color>
     <color name="questPopGreenMed"> #3eb959</color>
 
+    <color name="logoCoolor">#D53C3C</color>
+    <color name="gradStart">#2B193E</color>
+    <color name="gradStop">#3819bf</color>
+    <color name="transparent">#00000000</color>
+
     
 </resources>

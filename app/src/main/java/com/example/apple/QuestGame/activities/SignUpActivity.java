@@ -2,16 +2,23 @@ package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
 import android.app.DatePickerDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Patterns;
@@ -19,9 +26,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
+import com.example.apple.QuestGame.fragments.MainFragment;
 import com.example.apple.QuestGame.models.Quest;
 import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.utils.Constants;
@@ -32,12 +41,21 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -48,16 +66,17 @@ public class SignUpActivity extends AppCompatActivity {
     private ImageView userImage;
     private TextInputLayout mEmail;
     private TextInputLayout mPassword;
-    private TextInputLayout mBirthDate;
     private TextInputLayout mUsername;
     private TextInputLayout mFullame;
-    private TextInputEditText mBirthDateField;
-    private Button ready;
+    private Button ready, chooseImage;
     private DatePickerDialog date;
     private String previousDate;
-    private Button button;
-    private String imageName = UUID.randomUUID().toString() + ".jpg";
+    private String imageName = UUID.randomUUID().toString() + ".pngx";
     private FirebaseStorage storage;
+    private boolean available, mailAvailable;
+    private TextInputEditText userNameField;
+    private TextInputEditText userEmailField;
+    private TextInputEditText userPasswordField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,13 +85,7 @@ public class SignUpActivity extends AppCompatActivity {
 
         initFireBase();
         initButtons();
-
-        button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setUserImage();
-            }
-        });
+        checkInputedInfo();
 
         ready.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,8 +93,12 @@ public class SignUpActivity extends AppCompatActivity {
                 signUp();
             }
         });
-
-
+        chooseImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUserImage();
+            }
+        });
     }
 
     private void initFireBase() {
@@ -93,24 +110,14 @@ public class SignUpActivity extends AppCompatActivity {
     private void initButtons() {
         mEmail = findViewById(R.id.emailSignUp);
         mPassword = findViewById(R.id.passwordSignUp);
-        mBirthDate = findViewById(R.id.birthdaySignUp);
-        mBirthDateField = findViewById(R.id.birthdaySignUpField);
         mUsername = findViewById(R.id.userNameSignUp);
         mFullame = findViewById(R.id.fullnameSignUp);
         ready = findViewById(R.id.finishSignUp);
-        button = findViewById(R.id.button);
-//        userImage = findViewById(R.id.userImage);
-
-        mBirthDateField.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Calendar cal = Calendar.getInstance();
-                int day = cal.get(Calendar.DAY_OF_MONTH);
-                int month = cal.get(Calendar.MONTH);
-                int year = cal.get(Calendar.YEAR);
-                datePicker(day, month, year);
-            }
-        });
+        chooseImage = findViewById(R.id.signUpPhotoUpload);
+        userImage = findViewById(R.id.signUpUserImage);
+        userNameField = findViewById(R.id.userNameField);
+        userEmailField = findViewById(R.id.userEmailField);
+        userPasswordField = findViewById(R.id.userPasswordField);
     }
 
     private void signUp() {
@@ -124,7 +131,7 @@ public class SignUpActivity extends AppCompatActivity {
 
                                 User user = new User(imageName, mFullame.getEditText().getText().toString(),
                                         mUsername.getEditText().getText().toString(),
-                                        mUsername.getEditText().getText().toString(), mEmail.getEditText().toString());
+                                        mUsername.getEditText().getText().toString(), mEmail.getEditText().getText().toString());
                                 user.getQuests().put("child", new Quest());
                                 mDatabase.child("users").child(mAuth.getUid()).setValue(user);
                                 logIn();
@@ -149,36 +156,22 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void logIn() {
+        uploadToFireBase(getImageUri(getApplicationContext(), getBitmap()));
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
     }
 
-    private void datePicker(int day, int month, int year){
-        try {
-            previousDate = mBirthDateField.getText().toString();
-        } catch (NullPointerException n){}
-        date = new DatePickerDialog(this, new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                mBirthDateField.setText(dayOfMonth + "/" + (month + 1) + "/" + year);
-            }
-        }, year, month, day);
-        date.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                mBirthDateField.setText(previousDate);
-            }
-        });
-        date.show();
-    }
-
     private boolean checkEmail() {
         String email = mEmail.getEditText().getText().toString().trim();
+        checkEmailDatabase(email);
         if (email.isEmpty()) {
             mEmail.setError("Please enter email");
             return false;
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             mEmail.setError("Please enter a valid email address");
+            return false;
+        } else if(!mailAvailable){
+            mEmail.setError("Email is occupied");
             return false;
         } else {
             mEmail.setError(null);
@@ -192,6 +185,9 @@ public class SignUpActivity extends AppCompatActivity {
         if (password.isEmpty()) {
             mPassword.setError("Please enter password");
             return false;
+        } else if (password.length() < 6) {
+            mPassword.setError("Must be longer than 6 letter");
+            return false;
         } else {
             mPassword.setError(null);
             return true;
@@ -200,10 +196,19 @@ public class SignUpActivity extends AppCompatActivity {
 
     private boolean checkUserName(){
         String username = mUsername.getEditText().getText().toString().trim();
+        checkUserNameAvailability(username);
         if(username.isEmpty()){
             mUsername.setError("Please enter the username");
             return false;
-        } else {
+        } else if(!available){
+            mUsername.setError("Username is occupied ");
+            return false;
+        }else if(username.length() < 6){
+            mUsername.setError("Must be longer than 6 letter");
+            return false;
+        }
+            else
+         {
             mUsername.setError(null);
             return true;
         }
@@ -246,8 +251,7 @@ public class SignUpActivity extends AppCompatActivity {
         if(resultCode == RESULT_OK){
             if(requestCode == Constants.IMAGE_REQUEST){
                 Uri imageDataUri = data.getData();
-                userImage.setImageURI(imageDataUri);
-                uploadToFireBase(imageDataUri);
+                userImage.setImageBitmap(resizeImage(imageDataUri));
             }
         }
     }
@@ -260,12 +264,16 @@ public class SignUpActivity extends AppCompatActivity {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
+                Log.d("firebaseException", exception.getMessage());
                 toast(false);
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 toast(true);
+                if(!checkImageAvailability(imageName)){
+                    saveImageToStorage(getBitmap(), imageName);
+                }
             }
         });
     }
@@ -276,4 +284,169 @@ public class SignUpActivity extends AppCompatActivity {
             Toast.makeText(this, "Upload completed", Toast.LENGTH_LONG).show();
         }
     }
+
+    private void checkUserNameAvailability(final String string){
+//        DatabaseReference mRef = FirebaseDatabase.getInstance().getReference();
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
+                    String check = dataSnapshot1.child("user_name").getValue(String.class);
+                     if(!string.equals(check)){
+                         available = true;
+                     } else {
+                         available = false;
+                         break;
+                     }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }, 2000);
+    }
+
+    private Bitmap resizeImage(Uri imgFileOrig){
+        Bitmap b = null;
+        try {
+            b = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imgFileOrig);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int origWidth = b.getWidth();
+        int origHeight = b.getHeight();
+
+        final int destWidth = 400;
+
+        if (origWidth > destWidth) {
+            int destHeight = origHeight / (origWidth / destWidth);
+            Bitmap b2 = Bitmap.createScaledBitmap(b, destWidth, destHeight, false);
+            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+            b2.compress(Bitmap.CompressFormat.PNG, 100, outStream);
+
+            File f = new File(Environment.getExternalStorageDirectory()
+                    + File.separator + ".png");
+            try {
+                f.createNewFile();
+                FileOutputStream fo = new FileOutputStream(f);
+                fo.write(outStream.toByteArray());
+                fo.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return b2;
+        } else {
+            return b;
+        }
+    }
+
+    private Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
+    }
+
+    private Bitmap getBitmap(){
+        userImage.invalidate();
+        BitmapDrawable drawable = (BitmapDrawable) userImage.getDrawable();
+        return drawable.getBitmap();
+    }
+
+    private void saveImageToStorage(Bitmap bmp, String imageName)
+    {
+        File file = getFile(imageName);
+        OutputStream fOut = null;
+        try {
+            fOut = new FileOutputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        bmp.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+        try {
+            fOut.flush();
+            fOut.close();
+            MediaStore.Images.Media.insertImage(getContentResolver(),file.getAbsolutePath(),file.getName(),file.getName());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private File getFile(String imageName){
+        String path = Environment.getExternalStorageDirectory().toString();
+        Log.d("path", path);
+        return new File(path, imageName + ".png");
+    }
+
+    private boolean checkImageAvailability(String imageNAme){
+        File file = getFile(imageNAme);
+        return file.exists();
+    }
+
+    private void checkInputedInfo() {
+        userNameField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    if (mUsername.getEditText().getText().length() != 0) {
+                        checkUserName();
+                    }
+                }
+            }
+        });
+        userEmailField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    if (mEmail.getEditText().getText().length() != 0) {
+                        checkEmail();
+                    }
+                }
+            }
+        });
+        userPasswordField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(!hasFocus){
+                    if (mPassword.getEditText().getText().length() != 0) {
+                        checkPassword();
+                    }
+                }
+            }
+        });
+    }
+
+    private void checkEmailDatabase(final String mail){
+        mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
+                    String check = dataSnapshot1.child("mail").getValue(String.class);
+                    if(!mail.equals(check)){
+                        mailAvailable = true;
+                    } else {
+                        mailAvailable = false;
+                        break;
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+    }
+
 }
+
+

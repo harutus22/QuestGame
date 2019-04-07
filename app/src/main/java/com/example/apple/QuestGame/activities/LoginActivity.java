@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -15,6 +16,8 @@ import android.util.Log;
 import android.util.Patterns;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -49,6 +52,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class LoginActivity extends AppCompatActivity {
 
     private Button mBtnSignIn;
@@ -63,15 +69,21 @@ public class LoginActivity extends AppCompatActivity {
     private CallbackManager mCallbackManager;
     private boolean mIsLoggedIn;
     private GoogleSignInClient mGoogleSignInClient;
-
+    private ImageView logoFb;
+    private ImageView logoGoogle;
+    private LinearLayout layout;
+    private Handler handler;
+    private ImageView imageView;
+    private List<String> list = new ArrayList<>();
     private final String authFailed = "Authentication failed";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-        if(checkConnection()) {
+        list.add("email");
+        list.add("public_profile");
+        if (checkConnection()) {
 
             mAuth = FirebaseAuth.getInstance();
             mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -81,7 +93,12 @@ public class LoginActivity extends AppCompatActivity {
 
             googleSignInConfigure();
             initButtons();
-
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    layout.setVisibility(View.VISIBLE);
+                }
+            }, 3000);
             checkIfLogedIn();
 
             mBtnSignIn.setOnClickListener(new View.OnClickListener() {
@@ -96,7 +113,7 @@ public class LoginActivity extends AppCompatActivity {
                     signUp();
                 }
             });
-            mGoogleSignInButton.setOnClickListener(new View.OnClickListener() {
+            logoGoogle.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     signInGoogle();
@@ -120,7 +137,7 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if(checkConnection()) {
+        if (checkConnection()) {
             setGooglePlusButtonText("Sign in");
         }
     }
@@ -147,8 +164,8 @@ public class LoginActivity extends AppCompatActivity {
     private void facebookLogin() {
 
         mCallbackManager = CallbackManager.Factory.create();
-        mFacebookLoginButton.setReadPermissions("email", "public_profile");
-        mFacebookLoginButton.registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
+//        mFacebookLoginButton.setReadPermissions("email", "public_profile");
+        LoginManager.getInstance().registerCallback(mCallbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 handleFacebookAccessToken(loginResult.getAccessToken());
@@ -160,6 +177,14 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onError(FacebookException error) {
+            }
+        });
+
+
+        logoFb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LoginManager.getInstance().logInWithReadPermissions(LoginActivity.this, list);
             }
         });
     }
@@ -265,7 +290,7 @@ public class LoginActivity extends AppCompatActivity {
 
     }
 
-    private boolean checkPassword(){
+    private boolean checkPassword() {
         String password = mPassword.getEditText().getText().toString().trim();
         if (password.isEmpty()) {
             mPassword.setError("Please enter password");
@@ -283,6 +308,11 @@ public class LoginActivity extends AppCompatActivity {
         mGoogleSignInButton = findViewById(R.id.btnGoogleSignIn);
         mFacebookLoginButton = findViewById(R.id.btnFacebookLogin);
         mSignUp = findViewById(R.id.signUpTextView);
+        layout = (LinearLayout) findViewById(R.id.line11);
+        handler = new Handler();
+        imageView = findViewById(R.id.logo);
+        logoFb = findViewById(R.id.fb_logo);
+        logoGoogle = findViewById(R.id.google_logo);
     }
 
     private void firebaseAuthWithGoogle(GoogleSignInAccount acct) {
@@ -314,25 +344,24 @@ public class LoginActivity extends AppCompatActivity {
         }
     }
 
-    private boolean checkConnection(){
+    private boolean checkConnection() {
         ConnectivityManager cm =
-                (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null &&
                 activeNetwork.isConnected();
-        if(isConnected) {
+        if (isConnected) {
             Log.d("Network", "Connected");
             return true;
-        }
-        else{
+        } else {
             noInternetDialog();
-            Log.d("Network","Not Connected");
+            Log.d("Network", "Not Connected");
             return false;
         }
     }
 
-    private void noInternetDialog(){
+    private void noInternetDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("No internet Connection");
         builder.setMessage("Please turn on internet connection and start app");

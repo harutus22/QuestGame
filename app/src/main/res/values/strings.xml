@@ -30,8 +30,6 @@
     <string name="error_loading_ar_experience">Could not load AR experience.</string>
     <string name="username">username *</string>
 
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="congrats_words">You have made it!!!\nTake your reward</string>
     <string name="congratulations">Congratulations</string>
     <string name="dollar_sign">$</string>

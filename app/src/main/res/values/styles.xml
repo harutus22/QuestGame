@@ -20,7 +20,15 @@
     <style name="AppTheme.WhiteTextAppearance">
         <item name="android:textColor">@android:color/white</item>
     </style>
-    
+
+
+    <style name="viewTexts" parent="TextAppearance.AppCompat">
+        <item name="android:textColorHint">#ffffff</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">23sp</item>
+    </style>
+
+
     <style name="LoginTextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox.Dense">
         <item name="android:shape"> rectangle</item>
         <item name="boxBackgroundColor"> @color/greenMixBlueDarker</item>
@@ -29,6 +37,7 @@
         <item name="boxCornerRadiusTopStart"> 20dp</item>
         <item name="boxCornerRadiusTopEnd"> 20dp</item>
     </style>
+
 
 </resources>
 
