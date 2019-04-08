@@ -9,6 +9,7 @@
     <color name="questBackColorPressed">#708090</color>
     <color name="black"> #000000</color>
     <color name="darkYellow"> #ecba5c</color>
+    <color name="darkYellowDarker"> #e9b045</color>
     <color name="darkRed"> #652121</color>
     <color name="greyMixGreen"> #2f2800</color>
     <color name="yellowMixBrown"> #876524</color>
@@ -30,6 +31,9 @@
     <color name="gradStart">#2B193E</color>
     <color name="gradStop">#3819bf</color>
     <color name="transparent">#00000000</color>
+    <color name="desertSand"> #edc9af</color>
+    <color name="desertSandPressed"> #e8bb9a</color>
+    <color name="grey"> #7d7d7d</color>
 
     
 </resources>

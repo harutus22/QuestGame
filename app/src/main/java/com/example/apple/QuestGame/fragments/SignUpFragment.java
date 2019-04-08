@@ -1,13 +1,12 @@
-package com.example.apple.QuestGame.activities;
+package com.example.apple.QuestGame.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
@@ -16,21 +15,21 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TextInputEditText;
 import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.util.Patterns;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.apple.QuestGame.R;
-import com.example.apple.QuestGame.fragments.MainFragment;
+import com.example.apple.QuestGame.activities.MainActivity;
 import com.example.apple.QuestGame.models.Quest;
 import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.utils.Constants;
@@ -56,10 +55,17 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Calendar;
 import java.util.UUID;
 
-public class SignUpActivity extends AppCompatActivity {
+import static android.app.Activity.RESULT_OK;
+
+public class SignUpFragment extends Fragment {
+
+    private static final String ARG_PARAM1 = "param1";
+    private static final String ARG_PARAM2 = "param2";
+
+    private String mParam1;
+    private String mParam2;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -77,14 +83,50 @@ public class SignUpActivity extends AppCompatActivity {
     private TextInputEditText userNameField;
     private TextInputEditText userEmailField;
     private TextInputEditText userPasswordField;
+    private Context mContext;
+    private Activity mActivity;
+
+
+
+    public SignUpFragment() { }
+
+    public static SignUpFragment newInstance(String param1, String param2) {
+        SignUpFragment fragment = new SignUpFragment();
+        Bundle args = new Bundle();
+        args.putString(ARG_PARAM1, param1);
+        args.putString(ARG_PARAM2, param2);
+        fragment.setArguments(args);
+        return fragment;
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sign_up);
-
         initFireBase();
-        initButtons();
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_sign_up, container, false);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = context;
+        mActivity = getActivity();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        initButtons(view);
         checkInputedInfo();
 
         ready.setOnClickListener(new View.OnClickListener() {
@@ -107,24 +149,24 @@ public class SignUpActivity extends AppCompatActivity {
         storage = FirebaseStorage.getInstance();
     }
 
-    private void initButtons() {
-        mEmail = findViewById(R.id.emailSignUp);
-        mPassword = findViewById(R.id.passwordSignUp);
-        mUsername = findViewById(R.id.userNameSignUp);
-        mFullame = findViewById(R.id.fullnameSignUp);
-        ready = findViewById(R.id.finishSignUp);
-        chooseImage = findViewById(R.id.signUpPhotoUpload);
-        userImage = findViewById(R.id.signUpUserImage);
-        userNameField = findViewById(R.id.userNameField);
-        userEmailField = findViewById(R.id.userEmailField);
-        userPasswordField = findViewById(R.id.userPasswordField);
+    private void initButtons(View view) {
+        mEmail = view.findViewById(R.id.emailSignUp);
+        mPassword = view.findViewById(R.id.passwordSignUp);
+        mUsername = view.findViewById(R.id.userNameSignUp);
+        mFullame = view.findViewById(R.id.fullnameSignUp);
+        ready = view.findViewById(R.id.finishSignUp);
+        chooseImage = view.findViewById(R.id.signUpPhotoUpload);
+        userImage = view.findViewById(R.id.signUpUserImage);
+        userNameField = view.findViewById(R.id.userNameField);
+        userEmailField = view.findViewById(R.id.userEmailField);
+        userPasswordField = view.findViewById(R.id.userPasswordField);
     }
 
     private void signUp() {
         if (checkEditText()) {
             mAuth.createUserWithEmailAndPassword(mEmail .getEditText().getText().toString().trim(),
                     mPassword .getEditText().getText().toString().trim())
-                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    .addOnCompleteListener(mActivity, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
                             if (task.isSuccessful()) {
@@ -138,7 +180,7 @@ public class SignUpActivity extends AppCompatActivity {
                             } else {
                                 String string = mEmail.getEditText().toString().trim();
                                 FirebaseAuthException e = (FirebaseAuthException )task.getException();
-                                Toast.makeText(SignUpActivity.this, "Failed Registration: "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(mContext, "Failed Registration: "+e.getMessage(), Toast.LENGTH_SHORT).show();
                                 Log.e("SignUpActivity", "Failed Registration", e);
                                 Log.e("textMail", string);
                             }
@@ -151,14 +193,15 @@ public class SignUpActivity extends AppCompatActivity {
         if (checkEmail() && checkPassword() && checkUserName()) {
             return true;
         }
-        Toast.makeText(this, "Please fill obligatory fields", Toast.LENGTH_LONG).show();
+        Toast.makeText(mContext, "Please fill obligatory fields", Toast.LENGTH_LONG).show();
         return false;
     }
 
     private void logIn() {
-        uploadToFireBase(getImageUri(getApplicationContext(), getBitmap()));
-        Intent intent = new Intent(this, MainActivity.class);
+        uploadToFireBase(getImageUri(mContext, getBitmap()));
+        Intent intent = new Intent(mActivity, MainActivity.class);
         startActivity(intent);
+        mActivity.finish();
     }
 
     private boolean checkEmail() {
@@ -207,8 +250,8 @@ public class SignUpActivity extends AppCompatActivity {
             mUsername.setError("Must be longer than 6 letter");
             return false;
         }
-            else
-         {
+        else
+        {
             mUsername.setError(null);
             return true;
         }
@@ -220,7 +263,7 @@ public class SignUpActivity extends AppCompatActivity {
 
     private void onOpenGalleryClick(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            if(mContext.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.IMAGE_REQUEST);
             } else {
                 getPhoto();
@@ -246,7 +289,7 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if(resultCode == RESULT_OK){
             if(requestCode == Constants.IMAGE_REQUEST){
@@ -279,25 +322,24 @@ public class SignUpActivity extends AppCompatActivity {
     }
     private void toast(boolean success){
         if(!success) {
-            Toast.makeText(this, "Can not upload file", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "Can not upload file", Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(this, "Upload completed", Toast.LENGTH_LONG).show();
+            Toast.makeText(mContext, "Upload completed", Toast.LENGTH_LONG).show();
         }
     }
 
     private void checkUserNameAvailability(final String string){
-//        DatabaseReference mRef = FirebaseDatabase.getInstance().getReference();
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
                     String check = dataSnapshot1.child("user_name").getValue(String.class);
-                     if(!string.equals(check)){
-                         available = true;
-                     } else {
-                         available = false;
-                         break;
-                     }
+                    if(!string.equals(check)){
+                        available = true;
+                    } else {
+                        available = false;
+                        break;
+                    }
                 }
             }
 
@@ -318,7 +360,7 @@ public class SignUpActivity extends AppCompatActivity {
     private Bitmap resizeImage(Uri imgFileOrig){
         Bitmap b = null;
         try {
-            b = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imgFileOrig);
+            b = MediaStore.Images.Media.getBitmap(mActivity.getContentResolver(), imgFileOrig);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -375,7 +417,8 @@ public class SignUpActivity extends AppCompatActivity {
         try {
             fOut.flush();
             fOut.close();
-            MediaStore.Images.Media.insertImage(getContentResolver(),file.getAbsolutePath(),file.getName(),file.getName());
+            MediaStore.Images.Media.insertImage(mActivity.getContentResolver(),file.getAbsolutePath()
+                    ,file.getName(),file.getName());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -446,7 +489,4 @@ public class SignUpActivity extends AppCompatActivity {
             }
         });
     }
-
 }
-
-

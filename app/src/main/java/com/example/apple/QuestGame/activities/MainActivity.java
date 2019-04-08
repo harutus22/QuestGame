@@ -1,6 +1,7 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
@@ -62,6 +63,9 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
+    private BottomNavigationView mBottomNav;
+    private int mSelectedItem;
+    private static final String SELECTED_ITEM = "arg_selected_item";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,6 +132,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         FragmentTransaction fragmentManager = getSupportFragmentManager().beginTransaction();
+        fragmentManager.addToBackStack(null);
         if (model.getSelected().getValue() != null) {
             model.getSelected().observe(this, new Observer<String>() {
                 @Override
@@ -392,4 +397,13 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         AlertDialog alert = builder.create();
         alert.show();
     }
+
+    @Override
+    public void onBackPressed() {
+            if (getFragmentManager().getBackStackEntryCount() == 0) {
+                super.onBackPressed();
+            } else {
+                getFragmentManager().popBackStack();
+            }
+        }
 }

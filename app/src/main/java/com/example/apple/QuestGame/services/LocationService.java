@@ -52,6 +52,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class LocationService extends IntentService {
 
@@ -61,6 +62,7 @@ public class LocationService extends IntentService {
     private HashMap<String, Coin> coins = new HashMap<>();
     private final int avatar = R.drawable.coin;
     private StorageReference mStorageRef;
+    private HashSet<Quest> quests;
 
 
     public LocationService() {
@@ -85,6 +87,7 @@ public class LocationService extends IntentService {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorageRef = FirebaseStorage.getInstance().getReference().child("quest");
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        quests = new HashSet<>();
 
         if (Build.VERSION.SDK_INT >= 26) {
             String CHANNEL_ID = "my_channel_01";
