@@ -22,7 +22,8 @@ var World = {
               },
 
               onClick : function() {
-                  World.geoObject.destroy();
+//                  World.geoObject.destroy();
+                    AR.context.destroyAll();
                 }
         });
 
