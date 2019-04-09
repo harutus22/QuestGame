@@ -62,7 +62,7 @@ public class LocationService extends IntentService {
     private HashMap<String, Coin> coins = new HashMap<>();
     private final int avatar = R.drawable.coin;
     private StorageReference mStorageRef;
-    private HashSet<Quest> quests;
+    private ArrayList<Quest> quests;
 
 
     public LocationService() {
@@ -87,7 +87,7 @@ public class LocationService extends IntentService {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mStorageRef = FirebaseStorage.getInstance().getReference().child("quest");
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        quests = new HashSet<>();
+        quests = new ArrayList<>();
 
         if (Build.VERSION.SDK_INT >= 26) {
             String CHANNEL_ID = "my_channel_01";
@@ -185,11 +185,12 @@ public class LocationService extends IntentService {
                             coordinates.add(latLng);
                         }
                         Quest quest = new Quest(questId, name, description, avatar, coordinates, questions, reward);
-                        QuestLiveData.selected.setValue(quest);
+                        quests.add(quest);
                     if(!checkImageAvailability(avatar)) {
                         saveImage(avatar);
                     }
                 }
+                QuestLiveData.selected.setValue(quests);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {

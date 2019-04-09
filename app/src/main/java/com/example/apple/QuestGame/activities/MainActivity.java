@@ -63,9 +63,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
     };
-    private BottomNavigationView mBottomNav;
-    private int mSelectedItem;
-    private static final String SELECTED_ITEM = "arg_selected_item";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

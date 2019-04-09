@@ -5,16 +5,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.MapFragment">
+    tools:context=".activities.MainActivity">
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:map="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".fragments.MapFragment" />
+        tools:context=".fragments.MapFragment"
+        android:layout_marginTop="40dp"/>
 
     <android.support.v7.widget.AppCompatImageView
         android:id="@+id/mapFragmentPointsImage"
@@ -30,8 +30,22 @@
         android:id="@+id/mapFragmentUserPoints"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/white"
         app:layout_constraintStart_toEndOf="@id/mapFragmentPointsImage"
         app:layout_constraintTop_toTopOf="@id/mapFragmentPointsImage"
         android:layout_marginStart="10dp"/>
+
+    <ImageView
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/map"
+        android:layout_marginEnd="10dp"
+        android:id="@+id/imgMyLocation"
+        android:background="@drawable/my_location_selector"
+        android:padding="5dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/ic_my_location_black_24dp" />
 
 </android.support.constraint.ConstraintLayout>

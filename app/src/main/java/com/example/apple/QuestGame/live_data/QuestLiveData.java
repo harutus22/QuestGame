@@ -8,6 +8,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class QuestLiveData {
-    public static MutableLiveData<Quest> selected = new MutableLiveData<>();
+    public static MutableLiveData<ArrayList<Quest>> selected = new MutableLiveData<>();
 
 }

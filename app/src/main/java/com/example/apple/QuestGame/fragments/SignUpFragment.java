@@ -220,7 +220,6 @@ public class SignUpFragment extends Fragment {
             mEmail.setError(null);
             return true;
         }
-
     }
 
     private boolean checkPassword(){
@@ -334,11 +333,11 @@ public class SignUpFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
                     String check = dataSnapshot1.child("user_name").getValue(String.class);
-                    if(!string.equals(check)){
-                        available = true;
-                    } else {
+                    if(string.equals(check)){
                         available = false;
                         break;
+                    } else {
+                        available = true;
                     }
                 }
             }
@@ -474,11 +473,11 @@ public class SignUpFragment extends Fragment {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
                     String check = dataSnapshot1.child("mail").getValue(String.class);
-                    if(!mail.equals(check)){
-                        mailAvailable = true;
-                    } else {
+                    if(mail.equals(check)){
                         mailAvailable = false;
                         break;
+                    } else {
+                        mailAvailable = true;
                     }
                 }
             }

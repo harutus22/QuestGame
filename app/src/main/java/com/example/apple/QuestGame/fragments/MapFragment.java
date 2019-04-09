@@ -18,6 +18,7 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -28,6 +29,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -84,6 +86,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private FirebaseAuth mAuth;
     private MapRadar mapRadar;
     private TextView points;
+    private ImageView imgMyLocation;
     private LocationManager mLocationManager;
     private Activity activity;
     private Context mContext;
@@ -142,6 +145,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
     private void initPoints(View group) {
         points = group.findViewById(R.id.mapFragmentUserPoints);
+        imgMyLocation = group.findViewById(R.id.imgMyLocation);
         model.getSelected().observe(this, new Observer<String>() {
             @Override
             public void onChanged(@Nullable String s) {
@@ -149,6 +153,12 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             }
         });
 
+    }
+
+    private void getMyLocation(Double latitude, Double longitude) {
+        LatLng latLng = new LatLng(latitude, longitude);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.newLatLngZoom(latLng, 18);
+        mMap.animateCamera(cameraUpdate);
     }
 
     private void initMap() {
@@ -180,15 +190,17 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void initQuests() {
-        QuestLiveData.selected.observe(this, new Observer<Quest>() {
+        QuestLiveData.selected.observe(this, new Observer<ArrayList<Quest>>() {
             @Override
-            public void onChanged(@Nullable Quest quest) {
-                quests.add(quest);
-                String photoPath = Environment.getExternalStorageDirectory() + "/" + quest.getAvatar() + ".png";
-                Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
-                questMarker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
-                        (BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(bitmap))).
-                        title("quest").snippet(String.valueOf(quests.indexOf(quest))));
+            public void onChanged(@Nullable ArrayList<Quest> quest1) {
+                quests = quest1;
+                for(Quest quest: quest1) {
+                    String photoPath = Environment.getExternalStorageDirectory() + "/" + quest.getAvatar() + ".png";
+                    Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
+                    questMarker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
+                            (BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(bitmap))).
+                            title("quest").snippet(String.valueOf(quests.indexOf(quest))));
+                }
             }
         });
     }
@@ -196,6 +208,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @SuppressLint("MissingPermission")
     private void setMapStyle(GoogleMap mMap) {
         mMap.setMyLocationEnabled(true);
+        mMap.getUiSettings().setMyLocationButtonEnabled(false);
         int morning = 5;
         int afternoon = 13;
         int night = 21;
@@ -221,8 +234,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private void getFusedLocation() {
         MyLocationLiveData.myLocation.observe(this, new Observer<Location>() {
             @Override
-            public void onChanged(@Nullable Location location) {
+            public void onChanged(@Nullable final Location location) {
                 addItems(location);
+                imgMyLocation.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        getMyLocation(location.getLatitude(), location.getLongitude());
+                    }
+
+                });
             }
         });
     }
@@ -288,7 +308,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     public void onResume() {
         super.onResume();
         if (locationPermission && checkMapServices()) {
-            if (coins.isEmpty()) {
+            if (coins.isEmpty() && mMap != null) {
                 addItems(getLastLocation());
             }
             if (mMap == null) {
@@ -449,29 +469,6 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
 
             }
         });
-    }
-
-    private void setInfoWindow() {
-        // when cluster clicked opens window with short description
-        mClusterManager.getMarkerCollection()
-                .setOnInfoWindowAdapter(new ClusterInfoViewAdapter(LayoutInflater.from(mContext)));
-
-        mMap.setInfoWindowAdapter(mClusterManager.getMarkerManager());
-        onClusterWindowClick();
-    }
-
-    private void onClusterWindowClick() {
-        // if quest window clicked open more informative window
-        mClusterManager.setOnClusterItemInfoWindowClickListener(
-                new ClusterManager.OnClusterItemInfoWindowClickListener<Coin>() {
-                    @Override
-                    public void onClusterItemInfoWindowClick(Coin stringClusterItem) {
-                        Toast.makeText(mContext, "Clicked info window: " + stringClusterItem.getTitle(),
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-
-        mMap.setOnInfoWindowClickListener(mClusterManager);
     }
 
     @Override

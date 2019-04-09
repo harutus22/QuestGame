@@ -5,34 +5,45 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".fragments.MainFragment"
-    android:background="@drawable/wood_wall">
+    >
 
-    <TextView
-        android:id="@+id/mainFragmentUsername"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/top_linlay"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="daf"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginTop= "8dp"
-        android:layout_marginStart="8dp"
-        android:textSize="20dp"/>
+        android:orientation="horizontal"
+        android:gravity="center"
+        >
 
-    <TextView
-        android:id="@+id/mainFragmentPoints"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text=""
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toEndOf="@id/mainFragmentUsername"
-        android:layout_marginTop= "8dp"
-        android:layout_marginStart="8dp"
-        android:textSize="20dp"/>
+        <TextView
+            android:id="@+id/mainFragmentUsername"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="10dp"
+            android:fontFamily="@font/carnevalee_freakshow"
+            android:text="daf"
+            android:textColor="@color/white"
+            android:textSize="30sp"/>
+
+        <TextView
+            android:id="@+id/mainFragmentPoints"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:text=""
+            android:fontFamily="@font/carnevalee_freakshow"
+            android:textSize="30sp"/>
+
+    </LinearLayout>
 
    <android.support.v7.widget.RecyclerView
        android:id="@+id/questRecycler"
-       app:layout_constraintTop_toBottomOf="@id/mainFragmentUsername"
+       app:layout_constraintTop_toBottomOf="@id/top_linlay"
        android:layout_width="match_parent"
-       android:layout_height="wrap_content"/>
+       android:layout_height="match_parent"
+       android:layout_marginBottom="50dp"
+       android:layout_marginTop="40dp"
+       />
 
 </android.support.constraint.ConstraintLayout>

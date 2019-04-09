@@ -19,6 +19,9 @@ import com.example.apple.QuestGame.adapters.QuestViewAdapter;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
 import com.example.apple.QuestGame.live_data.QuestLiveData;
 import com.example.apple.QuestGame.models.Quest;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 public class MainFragment extends Fragment {
 
@@ -61,13 +64,14 @@ public class MainFragment extends Fragment {
     }
 
         private void initQuests() {
-            QuestLiveData.selected.observe(this, new Observer<Quest>() {
+            QuestLiveData.selected.observe(this, new Observer<ArrayList<Quest>>() {
                 @Override
-                public void onChanged(@Nullable Quest quest) {
-                    questViewAdapter.addData(quest);
+                public void onChanged(@Nullable ArrayList<Quest> quest) {
+                    questViewAdapter.setData(quest);
                 }
             });
         }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,

@@ -46,7 +46,7 @@ public class SettingsFragment extends Fragment {
     private ImageView mUserImage;
     private GoogleSignInClient mGoogleSignInClient;
     private Context mContext;
-    private Button mSignOut, mRanks, mEdit;
+    private Button mSignOut, mEdit;
 
 
     public SettingsFragment() { }
@@ -99,7 +99,6 @@ public class SettingsFragment extends Fragment {
         mPointsView = view.findViewById(R.id.settings_user_points);
         mUserImage = view.findViewById(R.id.settings_user_image);
         mEdit = view.findViewById(R.id.settings_btn_edit);
-        mRanks = view.findViewById(R.id.settings_btn_rank);
         mSignOut = view.findViewById(R.id.settings_btn_sign_out);
     }
 
@@ -171,7 +170,6 @@ public class SettingsFragment extends Fragment {
         if (user != null) {
             for (UserInfo profile : user.getProviderData()) {
                 check = profile.getProviderId();
-                Toast.makeText(getContext(), check, Toast.LENGTH_LONG).show();
             }
         }
 
