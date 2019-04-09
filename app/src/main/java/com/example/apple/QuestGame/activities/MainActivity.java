@@ -1,7 +1,6 @@
 package com.example.apple.QuestGame.activities;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.arch.lifecycle.Observer;
@@ -18,8 +17,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -29,15 +26,8 @@ import com.example.apple.QuestGame.fragments.MainFragment;
 import com.example.apple.QuestGame.fragments.MapFragment;
 import com.example.apple.QuestGame.fragments.SettingsFragment;
 import com.example.apple.QuestGame.live_data.PointsLiveData;
-import com.example.apple.QuestGame.models.User;
 import com.example.apple.QuestGame.services.LocationService;
 import com.example.apple.QuestGame.utils.Constants;
-import com.facebook.login.LoginManager;
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInClient;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserInfo;
@@ -92,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 name = dataSnapshot.child("users").child(userId).child("user_name").getValue(String.class);
-                point = String.valueOf(dataSnapshot.child("users").child(userId).child("points").getValue(Long.class));
+                point = String.valueOf(dataSnapshot.child("users").child(userId).child("points").getValue(String.class));
                 FragmentTransaction fragmentManager = getSupportFragmentManager().beginTransaction();
                 mainFragment = MainFragment.newInstance(name, point);
                 fragmentManager.add(R.id.placeHolder, mainFragment);

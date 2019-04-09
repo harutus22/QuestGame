@@ -11,7 +11,7 @@ public class User {
     private String user_name;
     private String user_id;
     private Map<String, Quest> quests;
-    private int points;
+    private String points;
     private String mail;
 
     public User(){
@@ -23,7 +23,7 @@ public class User {
         this.user_id = user_id;
         this.avatar = avatar;
         this.mail = mail;
-        points = 0;
+        points = " ";
         quests = new HashMap<>();
     }
 
@@ -63,9 +63,9 @@ public class User {
 
     public void setQuests(Map<String, Quest> quests) { this.quests = quests; }
 
-    public int getPoints() { return points; }
+    public String getPoints() { return points; }
 
-    public void setPoints(int points) { this.points = points; }
+    public void setPoints(String points) { this.points = points; }
 
     public String getMail() { return mail; }
 
