@@ -1,18 +1,13 @@
 package com.example.apple.QuestGame.fragments;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
 import android.arch.lifecycle.Observer;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.location.Location;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,52 +18,41 @@ import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.live_data.CoinsLiveDataProvider;
 import com.example.apple.QuestGame.live_data.MyLocationLiveData;
 import com.example.apple.QuestGame.models.Coin;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.SphericalUtil;
+import com.wikitude.architect.ArchitectJavaScriptInterfaceListener;
 import com.wikitude.architect.ArchitectStartupConfiguration;
 import com.wikitude.architect.ArchitectView;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CameraFragment extends Fragment {
+public class CameraFragment extends Fragment implements ArchitectJavaScriptInterfaceListener {
 
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
-    private static final int REQUEST_FINE_LOCATION = 200;
+    private boolean canCreateModel;
+    private boolean isInstantTracking;
+
     ArchitectView mArchitectView;
 
-    private FusedLocationProviderClient mFusedLocationClient;
-    private LocationRequest mLocationRequest;
-    private LocationCallback mLocationCallback;
-    private Map<String, Coin> coinsData = new HashMap<>();
+    private HashMap<String, Coin> coinsData = new HashMap<>();
     private Location myLocation;
-    private Context context;
-
-    private static final int MY_CAMERA_REQUEST_CODE = 100;
 
     public CameraFragment() { }
 
-    public static CameraFragment newInstance(String param1, String param2) {
-        CameraFragment fragment = new CameraFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        canCreateModel = true;
+        isInstantTracking = false;
     }
 
     @Override
@@ -80,7 +64,6 @@ public class CameraFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        this.context= context;
     }
 
     @Override
@@ -91,11 +74,11 @@ public class CameraFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        checkPermissions();
         mArchitectView = view.findViewById(R.id.architectView);
-
+        mArchitectView.addArchitectJavaScriptInterfaceListener(CameraFragment.this);
         getCoins();
         getLocation();
+
     }
 
     private void getLocation() {
@@ -103,9 +86,12 @@ public class CameraFragment extends Fragment {
             @Override
             public void onChanged(@Nullable Location location) {
                 myLocation = location;
-                final JSONArray jsonArray = generatePoiInformation();
                 mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                mArchitectView.callJavascript("World.createModelAtLocation(" + jsonArray.toString() + ")");
+                if(myLocation != null && canCreateModel) {
+                    canCreateModel = false;
+                    createModelAtLocation();
+                }
+
             }
         });
     }
@@ -115,62 +101,24 @@ public class CameraFragment extends Fragment {
             @Override
             public void onChanged(@Nullable HashMap<String, Coin> coin) {
                 coinsData = coin;
-
-//                final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
-//                config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
-//                config.setLicenseKey(getString(R.string.wikitude_license_key));
-//                mArchitectView.onCreate(config);
             }
         });
     }
 
 
-    @SuppressLint("MissingPermission")
-    @Override
 
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        switch (requestCode){
-            case MY_CAMERA_REQUEST_CODE:
-            {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(getActivity(), "camera permission granted", Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(getActivity(), "camera permission denied", Toast.LENGTH_LONG).show();
-                }
-                break;
-            }
-            case REQUEST_FINE_LOCATION:
-                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    getLocation();
-                }
-        }
-    }
-
-//    @Override
-//    protected void onPostCreate(@Nullable Bundle savedInstanceState) {
-//        super.onPostCreate(savedInstanceState);
-//        mArchitectView.onPostCreate();
-//        try {
-//            mArchitectView.load("3dModelAtGeo/index.html");
-//        } catch (IOException e) {
-//            Toast.makeText(getActivity(), getString(R.string.error_loading_ar_experience), Toast.LENGTH_SHORT).show();
-//        }
-//
-//    }
 
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+
         final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
         config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
+        config.setFeatures(ArchitectStartupConfiguration.Features.InstantTracking);
         config.setLicenseKey(getString(R.string.wikitude_license_key));
         try {
             mArchitectView.onCreate(config);
-
             mArchitectView.onPostCreate();
         } catch (RuntimeException rex) {
             this.mArchitectView = null;
@@ -178,11 +126,13 @@ public class CameraFragment extends Fragment {
             Log.e(this.getClass().getName(), "Exception in ArchitectView.onCreate()", rex);
         }
 
+
         try {
             mArchitectView.load("3dModelAtGeo/index.html");
         } catch (IOException e) {
             Toast.makeText(getActivity(), getString(R.string.error_loading_ar_experience), Toast.LENGTH_SHORT).show();
         }
+
     }
 
     @Override
@@ -194,6 +144,7 @@ public class CameraFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
+        mArchitectView.clearCache();
         mArchitectView.onPause();
     }
 
@@ -202,54 +153,85 @@ public class CameraFragment extends Fragment {
         super.onDestroy();
         mArchitectView.clearCache();
         mArchitectView.onDestroy();
-        if (mFusedLocationClient != null) {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-        }
-
     }
 
-    private JSONArray generatePoiInformation() {
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        mArchitectView.onLowMemory();
+    }
+
+    private void createModelAtLocation(){
+            Map.Entry<String, Coin> entry = null;
+
+        for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
+
+                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 100 ) {
+                    entry = stringCoinEntry;
+                   final double[] coinLocationLatLon = new double[]{entry.getValue().getPosition().latitude, entry.getValue().getPosition().longitude};
+                   final String key = entry.getKey();
+                    if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 50 ) {
+                        if(!isInstantTracking){
+                            final JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
+                            final Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    changeTrackerState();
+                                    mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
+                                }
+                            }, 1500);
+                        }
+
+                    }else {
+                        if(isInstantTracking){
+                            changeTrackerState();
+                        }
+                        final JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
+                        mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
+
+                    }
+                }
+           }
+        if(entry == null){
+            canCreateModel = true;
+        }
+    }
+
+
+    private JSONArray generateCoinInformation(double[] coinLocationLatLon, String key) {
 
         final JSONArray coins = new JSONArray();
 
+        final String ATTR_KEY = "key";
         final String ATTR_LATITUDE = "latitude";
         final String ATTR_LONGITUDE = "longitude";
 
         final HashMap<String, String> coinInformation = new HashMap<>();
 
-        for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
-
-            if(myLocation != null) {
-                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-
-                double[] coinLocationLatLon = new double[]{stringCoinEntry.getValue().getPosition().latitude, stringCoinEntry.getValue().getPosition().longitude};
-
-                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 15 &&
-                        !stringCoinEntry.getValue().isCluster()) {
-                    coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
-                    coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
-                    coins.put(new JSONObject(coinInformation));
-                }
-            }
-        }
+        coinInformation.put(ATTR_KEY, key);
+        coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
+        coinInformation.put(ATTR_LONGITUDE, String.valueOf(coinLocationLatLon[1]));
+        coins.put(new JSONObject(coinInformation));
 
         return coins;
     }
 
-    private void checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context.getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        REQUEST_FINE_LOCATION);
-            }
-        }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context.getApplicationContext(),Manifest.permission.CAMERA)
-                    != PackageManager.PERMISSION_GRANTED ) {
-                requestPermissions(new String[]{Manifest.permission.CAMERA},
-                        MY_CAMERA_REQUEST_CODE);
-            }
+    private void changeTrackerState(){
+        mArchitectView.callJavascript("World.changeTrackerState()");
+        isInstantTracking = !isInstantTracking;
+    }
+
+    @Override
+    public void onJSONObjectReceived(JSONObject jsonObject) {
+        try {
+            coinsData.remove(jsonObject.getString("key"));
+            CoinsLiveDataProvider.mCoins.postValue(coinsData);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
+
+
 }
