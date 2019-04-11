@@ -34,13 +34,14 @@ import java.util.Map;
 
 public class CameraFragment extends Fragment implements ArchitectJavaScriptInterfaceListener {
 
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private final String ATTR_KEY = "key";
+    private final String ATTR_LATITUDE = "latitude";
+    private final String ATTR_LONGITUDE = "longitude";
 
     private boolean canCreateModel;
     private boolean isInstantTracking;
 
-    ArchitectView mArchitectView;
+    private ArchitectView mArchitectView;
 
     private HashMap<String, Coin> coinsData = new HashMap<>();
     private Location myLocation;
@@ -78,7 +79,6 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
         mArchitectView.addArchitectJavaScriptInterfaceListener(CameraFragment.this);
         getCoins();
         getLocation();
-
     }
 
     private void getLocation() {
@@ -112,7 +112,6 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-
         final ArchitectStartupConfiguration config = new ArchitectStartupConfiguration();
         config.setFeatures(ArchitectStartupConfiguration.Features.Geo);
         config.setFeatures(ArchitectStartupConfiguration.Features.InstantTracking);
@@ -125,7 +124,6 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
             Toast.makeText(getActivity().getApplicationContext(), "can't create Architect View", Toast.LENGTH_SHORT).show();
             Log.e(this.getClass().getName(), "Exception in ArchitectView.onCreate()", rex);
         }
-
 
         try {
             mArchitectView.load("3dModelAtGeo/index.html");
@@ -162,38 +160,38 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
     }
 
     private void createModelAtLocation(){
-            Map.Entry<String, Coin> entry = null;
+        Map.Entry<String, Coin> entry = null;
 
         for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
+            LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
-                LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
-                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 50 ) {
-                    entry = stringCoinEntry;
-                   final double[] coinLocationLatLon = new double[]{entry.getValue().getPosition().latitude, entry.getValue().getPosition().longitude};
-                   final String key = entry.getKey();
-                    if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 25 ) {
-                        if(!isInstantTracking){
-                            final JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
-                            final Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    changeTrackerState();
-                                    mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
-                                }
-                            }, 1500);
-                        }
-
-                    }else {
-                        if(isInstantTracking){
-                            changeTrackerState();
-                        }
+            if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 50 ) {
+                entry = stringCoinEntry;
+                final double[] coinLocationLatLon = new double[]{entry.getValue().getPosition().latitude, entry.getValue().getPosition().longitude};
+                final String key = entry.getKey();
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 25 ) {
+                    if(!isInstantTracking){
                         final JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
-                        mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
-
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                changeTrackerState();
+                                mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
+                            }
+                        }, 1500);
                     }
+
+                }else {
+                    if(isInstantTracking){
+                        changeTrackerState();
+                    }
+                    JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
+                    mArchitectView.callJavascript("World.addModel(" + jsonArray.toString() + ")");
+
                 }
-           }
+            }
+        }
         if(entry == null){
             canCreateModel = true;
         }
@@ -202,13 +200,8 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
 
     private JSONArray generateCoinInformation(double[] coinLocationLatLon, String key) {
 
-        final JSONArray coins = new JSONArray();
-
-        final String ATTR_KEY = "key";
-        final String ATTR_LATITUDE = "latitude";
-        final String ATTR_LONGITUDE = "longitude";
-
-        final HashMap<String, String> coinInformation = new HashMap<>();
+        JSONArray coins = new JSONArray();
+        HashMap<String, String> coinInformation = new HashMap<>();
 
         coinInformation.put(ATTR_KEY, key);
         coinInformation.put(ATTR_LATITUDE, String.valueOf(coinLocationLatLon[0]));
