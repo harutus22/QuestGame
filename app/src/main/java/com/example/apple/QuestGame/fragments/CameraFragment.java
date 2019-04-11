@@ -34,9 +34,9 @@ import java.util.Map;
 
 public class CameraFragment extends Fragment implements ArchitectJavaScriptInterfaceListener {
 
-    private final String ATTR_KEY = "key";
-    private final String ATTR_LATITUDE = "latitude";
-    private final String ATTR_LONGITUDE = "longitude";
+    private static final String ATTR_KEY = "key";
+    private static final String ATTR_LATITUDE = "latitude";
+    private static final String ATTR_LONGITUDE = "longitude";
 
     private boolean canCreateModel;
     private boolean isInstantTracking;
