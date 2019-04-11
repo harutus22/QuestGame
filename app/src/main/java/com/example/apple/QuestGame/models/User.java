@@ -12,7 +12,7 @@ public class User {
     private String points;
     private String mail;
 
-    public User(){
+    public User() {
     }
 
     public User(String avatar, String full_name, String user_name, String user_id, String mail) {
@@ -57,15 +57,27 @@ public class User {
         this.user_id = user_id;
     }
 
-    public Map<String, Quest> getQuests() { return quests; }
+    public Map<String, Quest> getQuests() {
+        return quests;
+    }
 
-    public void setQuests(Map<String, Quest> quests) { this.quests = quests; }
+    public void setQuests(Map<String, Quest> quests) {
+        this.quests = quests;
+    }
 
-    public String getPoints() { return points; }
+    public String getPoints() {
+        return points;
+    }
 
-    public void setPoints(String points) { this.points = points; }
+    public void setPoints(String points) {
+        this.points = points;
+    }
 
-    public String getMail() { return mail; }
+    public String getMail() {
+        return mail;
+    }
 
-    public void setMail(String mail) { this.mail = mail; }
+    public void setMail(String mail) {
+        this.mail = mail;
+    }
 }

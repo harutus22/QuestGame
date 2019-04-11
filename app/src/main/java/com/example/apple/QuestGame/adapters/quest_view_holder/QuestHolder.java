@@ -17,18 +17,26 @@ public class QuestHolder extends RecyclerView.ViewHolder {
     private TextView reward;
     private OnItemClickListener onItemClickListener;
 
-    public ImageView getQuestImage() { return questImage; }
+    public ImageView getQuestImage() {
+        return questImage;
+    }
 
-    public TextView getTitle() { return title; }
+    public TextView getTitle() {
+        return title;
+    }
 
-    public TextView getDescription() { return description; }
+    public TextView getDescription() {
+        return description;
+    }
 
-    public TextView getReward() { return reward; }
+    public TextView getReward() {
+        return reward;
+    }
 
     private View.OnClickListener mOnClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if(onItemClickListener != null){
+            if (onItemClickListener != null) {
                 onItemClickListener.onItemClick(getAdapterPosition());
             }
         }

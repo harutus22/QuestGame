@@ -54,7 +54,7 @@ public class Quest {
     private PopUpDialog.OnButtonClick buttonClick = new PopUpDialog.OnButtonClick() {
         @Override
         public void onClick(View button) {
-            if(onButtonClick != null){
+            if (onButtonClick != null) {
                 onButtonClick.onClick(button);
                 button.setVisibility(View.GONE);
             }
@@ -124,19 +124,29 @@ public class Quest {
         this.questions = questions;
     }
 
-    public int getReward() { return reward; }
+    public int getReward() {
+        return reward;
+    }
 
     public void setReward(int reward) {
         this.reward = reward;
     }
 
-    public void setZero(boolean zero) { this.zero = zero; }
+    public void setZero(boolean zero) {
+        this.zero = zero;
+    }
 
-    public boolean isFinished() { return finished; }
+    public boolean isFinished() {
+        return finished;
+    }
 
-    public int getCount() { return count; }
+    public int getCount() {
+        return count;
+    }
 
-    public void setCount(int count) { this.count = count; }
+    public void setCount(int count) {
+        this.count = count;
+    }
 
     public void setAccepted(boolean accepted) {
         this.accepted = accepted;
@@ -147,13 +157,13 @@ public class Quest {
     }
 
     public void startQuest(FragmentManager fragmentManager, Context context, FragmentActivity activity) {
-        if(popUpDialog == null){
-           popUpDialog = new PopUpDialog();
+        if (popUpDialog == null) {
+            popUpDialog = new PopUpDialog();
         }
         mContext = context;
         popUpDialog.setTitle(getName());
         popUpDialog.setDescription(getDescription());
-        popUpDialog.show(fragmentManager,"pop");
+        popUpDialog.show(fragmentManager, "pop");
         popUpDialog.setOnButtonClick(buttonClick);
         model = ViewModelProviders.of(activity).get(PointsLiveData.class);
         model.getSelected().observe(activity, new Observer<String>() {
@@ -164,32 +174,31 @@ public class Quest {
         });
     }
 
-    public void passQuest(final GoogleMap mMap, final FragmentManager fragmentManager, LifecycleOwner lifecycle){
-        if(accepted) {
+    public void passQuest(final GoogleMap mMap, final FragmentManager fragmentManager, LifecycleOwner lifecycle) {
+        if (accepted) {
             MyLocationLiveData.myLocation.observe(lifecycle, new Observer<Location>() {
                 @Override
                 public void onChanged(@Nullable Location location) {
                     LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
 
-                        if (zero) {
+                    if (zero) {
 
-                            icon = BitmapFactory.decodeResource(mContext.getResources(),
-                                    R.drawable.question_marker);
-                            popUpDialog.dismiss();
-                            popUpDialog.setDescription(getQuestions().get(count + 1));
-                            popUpDialog.show(fragmentManager, "pop");
-                            zero = false;
-                        }
-                        if (count == 1) {
-                            setMarker(mMap, count, fragmentManager, latLng);
-                        }
-                        else if (count == 6) {
-                            accepted = false;
-                            finished = true;
-                            popUpDialog = null;
-                            setPoints(String.valueOf(getReward() + convert(points)));
-                        } else {
-                            setMarker(mMap, count, fragmentManager, latLng);
+                        icon = BitmapFactory.decodeResource(mContext.getResources(),
+                                R.drawable.question_marker);
+                        popUpDialog.dismiss();
+                        popUpDialog.setDescription(getQuestions().get(count + 1));
+                        popUpDialog.show(fragmentManager, "pop");
+                        zero = false;
+                    }
+                    if (count == 1) {
+                        setMarker(mMap, count, fragmentManager, latLng);
+                    } else if (count == 6) {
+                        accepted = false;
+                        finished = true;
+                        popUpDialog = null;
+                        setPoints(String.valueOf(getReward() + convert(points)));
+                    } else {
+                        setMarker(mMap, count, fragmentManager, latLng);
                     }
                 }
             });
@@ -197,8 +206,8 @@ public class Quest {
         }
     }
 
-    private void setMarker(GoogleMap mMap, int number, final FragmentManager fragmentManager, LatLng latLng){
-        if(questMarker == null) {
+    private void setMarker(GoogleMap mMap, int number, final FragmentManager fragmentManager, LatLng latLng) {
+        if (questMarker == null) {
             popUpDialog.setDescription(getQuestions().get(number - 1));
             questMarker = mMap.addMarker(new MarkerOptions().
                     icon(BitmapDescriptorFactory.fromBitmap(BitmapResize.getResizedBitmap(icon))).
@@ -206,7 +215,7 @@ public class Quest {
             questMarker.setVisible(false);
         } else {
             if (checkDistance(latLng)) {
-                if(!questMarker.isVisible()) {
+                if (!questMarker.isVisible()) {
                     questMarker.setVisible(true);
                 }
                 final int numb = number;
@@ -215,7 +224,7 @@ public class Quest {
                     public boolean onMarkerClick(Marker marker) {
                         Log.d("mark", marker.getTitle());
                         if (marker.getTitle() != null && marker.getTitle().equals("Introductive Quest")) {
-                            if(count != 5) {
+                            if (count != 5) {
                                 count++;
                                 removeMarker(marker);
                                 popUpDialog.setDescription(getQuestions().get(numb));
@@ -236,33 +245,33 @@ public class Quest {
                     }
                 });
             } else {
-                if(questMarker.isVisible()) {
+                if (questMarker.isVisible()) {
                     questMarker.setVisible(false);
                 }
             }
         }
     }
 
-    private void setPoints(String string){
+    private void setPoints(String string) {
         model.select(string);
     }
 
-    private Integer convert(String point){
+    private Integer convert(String point) {
         return Integer.valueOf(point);
     }
 
-    private boolean checkDistance(LatLng myLocation){
+    private boolean checkDistance(LatLng myLocation) {
         return SphericalUtil.computeDistanceBetween(myLocation, coordinate.get(count)) < 15;
     }
 
-    private void removeMarker(Marker marker){
-        if(marker != null) {
+    private void removeMarker(Marker marker) {
+        if (marker != null) {
             marker.remove();
             questMarker = null;
         }
     }
 
-    public interface OnButtonClick{
+    public interface OnButtonClick {
         void onClick(View view);
     }
 }

@@ -87,8 +87,8 @@ public class SignUpFragment extends Fragment {
     private Activity mActivity;
 
 
-
-    public SignUpFragment() { }
+    public SignUpFragment() {
+    }
 
     public static SignUpFragment newInstance(String param1, String param2) {
         SignUpFragment fragment = new SignUpFragment();
@@ -164,8 +164,8 @@ public class SignUpFragment extends Fragment {
 
     private void signUp() {
         if (checkEditText()) {
-            mAuth.createUserWithEmailAndPassword(mEmail .getEditText().getText().toString().trim(),
-                    mPassword .getEditText().getText().toString().trim())
+            mAuth.createUserWithEmailAndPassword(mEmail.getEditText().getText().toString().trim(),
+                    mPassword.getEditText().getText().toString().trim())
                     .addOnCompleteListener(mActivity, new OnCompleteListener<AuthResult>() {
                         @Override
                         public void onComplete(@NonNull Task<AuthResult> task) {
@@ -179,8 +179,8 @@ public class SignUpFragment extends Fragment {
                                 logIn();
                             } else {
                                 String string = mEmail.getEditText().toString().trim();
-                                FirebaseAuthException e = (FirebaseAuthException )task.getException();
-                                Toast.makeText(mContext, "Failed Registration: "+e.getMessage(), Toast.LENGTH_SHORT).show();
+                                FirebaseAuthException e = (FirebaseAuthException) task.getException();
+                                Toast.makeText(mContext, "Failed Registration: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                                 Log.e("SignUpActivity", "Failed Registration", e);
                                 Log.e("textMail", string);
                             }
@@ -213,7 +213,7 @@ public class SignUpFragment extends Fragment {
         } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             mEmail.setError("Please enter a valid email address");
             return false;
-        } else if(!mailAvailable){
+        } else if (!mailAvailable) {
             mEmail.setError("Email is occupied");
             return false;
         } else {
@@ -222,7 +222,7 @@ public class SignUpFragment extends Fragment {
         }
     }
 
-    private boolean checkPassword(){
+    private boolean checkPassword() {
         String password = mPassword.getEditText().getText().toString().trim();
         if (password.isEmpty()) {
             mPassword.setError("Please enter password");
@@ -236,33 +236,31 @@ public class SignUpFragment extends Fragment {
         }
     }
 
-    private boolean checkUserName(){
+    private boolean checkUserName() {
         String username = mUsername.getEditText().getText().toString().trim();
         checkUserNameAvailability(username);
-        if(username.isEmpty()){
+        if (username.isEmpty()) {
             mUsername.setError("Please enter the username");
             return false;
-        } else if(!available){
+        } else if (!available) {
             mUsername.setError("Username is occupied ");
             return false;
-        }else if(username.length() < 6){
+        } else if (username.length() < 6) {
             mUsername.setError("Must be longer than 6 letter");
             return false;
-        }
-        else
-        {
+        } else {
             mUsername.setError(null);
             return true;
         }
     }
 
-    private void setUserImage(){
+    private void setUserImage() {
         onOpenGalleryClick();
     }
 
-    private void onOpenGalleryClick(){
+    private void onOpenGalleryClick() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(mContext.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            if (mContext.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, Constants.IMAGE_REQUEST);
             } else {
                 getPhoto();
@@ -275,8 +273,8 @@ public class SignUpFragment extends Fragment {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode == Constants.IMAGE_REQUEST){
-            if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == Constants.IMAGE_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getPhoto();
             }
         }
@@ -290,8 +288,8 @@ public class SignUpFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(resultCode == RESULT_OK){
-            if(requestCode == Constants.IMAGE_REQUEST){
+        if (resultCode == RESULT_OK) {
+            if (requestCode == Constants.IMAGE_REQUEST) {
                 Uri imageDataUri = data.getData();
                 userImage.setImageBitmap(resizeImage(imageDataUri));
             }
@@ -313,27 +311,28 @@ public class SignUpFragment extends Fragment {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 toast(true);
-                if(!checkImageAvailability(imageName)){
+                if (!checkImageAvailability(imageName)) {
                     saveImageToStorage(getBitmap(), imageName);
                 }
             }
         });
     }
-    private void toast(boolean success){
-        if(!success) {
+
+    private void toast(boolean success) {
+        if (!success) {
             Toast.makeText(mContext, "Can not upload file", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(mContext, "Upload completed", Toast.LENGTH_LONG).show();
         }
     }
 
-    private void checkUserNameAvailability(final String string){
+    private void checkUserNameAvailability(final String string) {
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.child("users").getChildren()) {
                     String check = dataSnapshot1.child("user_name").getValue(String.class);
-                    if(string.equals(check)){
+                    if (string.equals(check)) {
                         available = false;
                         break;
                     } else {
@@ -356,7 +355,7 @@ public class SignUpFragment extends Fragment {
         }, 2000);
     }
 
-    private Bitmap resizeImage(Uri imgFileOrig){
+    private Bitmap resizeImage(Uri imgFileOrig) {
         Bitmap b = null;
         try {
             b = MediaStore.Images.Media.getBitmap(mActivity.getContentResolver(), imgFileOrig);
@@ -397,14 +396,13 @@ public class SignUpFragment extends Fragment {
         return Uri.parse(path);
     }
 
-    private Bitmap getBitmap(){
+    private Bitmap getBitmap() {
         userImage.invalidate();
         BitmapDrawable drawable = (BitmapDrawable) userImage.getDrawable();
         return drawable.getBitmap();
     }
 
-    private void saveImageToStorage(Bitmap bmp, String imageName)
-    {
+    private void saveImageToStorage(Bitmap bmp, String imageName) {
         File file = getFile(imageName);
         OutputStream fOut = null;
         try {
@@ -416,20 +414,20 @@ public class SignUpFragment extends Fragment {
         try {
             fOut.flush();
             fOut.close();
-            MediaStore.Images.Media.insertImage(mActivity.getContentResolver(),file.getAbsolutePath()
-                    ,file.getName(),file.getName());
+            MediaStore.Images.Media.insertImage(mActivity.getContentResolver(), file.getAbsolutePath()
+                    , file.getName(), file.getName());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private File getFile(String imageName){
+    private File getFile(String imageName) {
         String path = Environment.getExternalStorageDirectory().toString();
         Log.d("path", path);
         return new File(path, imageName + ".png");
     }
 
-    private boolean checkImageAvailability(String imageNAme){
+    private boolean checkImageAvailability(String imageNAme) {
         File file = getFile(imageNAme);
         return file.exists();
     }
@@ -438,7 +436,7 @@ public class SignUpFragment extends Fragment {
         userNameField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if(!hasFocus){
+                if (!hasFocus) {
                     if (mUsername.getEditText().getText().length() != 0) {
                         checkUserName();
                     }
@@ -448,7 +446,7 @@ public class SignUpFragment extends Fragment {
         userEmailField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if(!hasFocus){
+                if (!hasFocus) {
                     if (mEmail.getEditText().getText().length() != 0) {
                         checkEmail();
                     }
@@ -458,7 +456,7 @@ public class SignUpFragment extends Fragment {
         userPasswordField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-                if(!hasFocus){
+                if (!hasFocus) {
                     if (mPassword.getEditText().getText().length() != 0) {
                         checkPassword();
                     }
@@ -467,13 +465,13 @@ public class SignUpFragment extends Fragment {
         });
     }
 
-    private void checkEmailDatabase(final String mail){
+    private void checkEmailDatabase(final String mail) {
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                for(DataSnapshot dataSnapshot1: dataSnapshot.child("users").getChildren()){
+                for (DataSnapshot dataSnapshot1 : dataSnapshot.child("users").getChildren()) {
                     String check = dataSnapshot1.child("mail").getValue(String.class);
-                    if(mail.equals(check)){
+                    if (mail.equals(check)) {
                         mailAvailable = false;
                         break;
                     } else {

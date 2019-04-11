@@ -24,22 +24,32 @@ public class PopUpDialog extends DialogFragment {
     private OnButtonClick onButtonClick;
     private boolean questStarted;
 
-    public PopUpDialog(){}
+    public PopUpDialog() {
+    }
 
-    public String getTitle() { return title; }
+    public String getTitle() {
+        return title;
+    }
 
-    public void setTitle(String title) { this.title = title; }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    public String getDescription() { return description; }
+    public String getDescription() {
+        return description;
+    }
 
-    public void setDescription(String description) { this.description = description; }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-    public Button getStart() { return start; }
+    public Button getStart() {
+        return start;
+    }
 
     public void setOnButtonClick(OnButtonClick onButtonClick) {
         this.onButtonClick = onButtonClick;
     }
-
 
 
     @Nullable
@@ -52,11 +62,11 @@ public class PopUpDialog extends DialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         initViews(view);
-        if(title != null) {
+        if (title != null) {
             viewTitle.setText(title);
         }
         viewDescription.setText(description);
-        if(questStarted){
+        if (questStarted) {
             start.setVisibility(View.GONE);
         }
     }
@@ -79,18 +89,18 @@ public class PopUpDialog extends DialogFragment {
         });
     }
 
-    private void initViews(View view){
+    private void initViews(View view) {
         viewTitle = view.findViewById(R.id.pop_up_text_title);
         viewDescription = view.findViewById(R.id.pop_up_text_description);
         start = view.findViewById(R.id.pop_up_quest_start);
         close = view.findViewById(R.id.pop_close);
     }
 
-    private void change(){
+    private void change() {
         questStarted = true;
     }
 
-    public interface OnButtonClick{
+    public interface OnButtonClick {
         void onClick(View Button);
     }
 }

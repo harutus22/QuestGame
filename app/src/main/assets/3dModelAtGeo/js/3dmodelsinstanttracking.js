@@ -15,41 +15,21 @@ var World = {
 
         World.createOverlaysCalled = true;
 
-
         this.tracker = new AR.InstantTracker({
-
             deviceHeight: 1.0,
             onError: World.onError,
             onChangeStateError: World.onError
         });
 
         this.instantTrackable = new AR.InstantTrackable(this.tracker, {
-
-            onTrackingStarted: function onTrackingStartedFn() {
-                /* Do something when tracking is started (recognized). */
-            },
-            onTrackingStopped: function onTrackingStoppedFn() {
-                /* Do something when tracking is stopped (lost). */
-            },
-            onTrackingPlaneClick: function onTrackingPlaneClickFn() {
-                /*
-                    xPos and yPos are the intersection coordinates of the click ray and the instant tracking plane.
-                    They can be applied to the transform component directly.
-                */
-            },
             onError: World.onError
         });
 
-
-
         var location1 = new AR.GeoLocation(40.372744, 44.950028);
-
 
         this.geoObject = new AR.GeoObject(location1, {
                 radar: this.radardrawables
-                });
-
-
+        });
     },
 
     changeTrackerState: function changeTrackerStateFn() {
@@ -63,30 +43,29 @@ var World = {
 
 
 
-    addModel: function addModelFn(modelData) {
+     addModel: function addModelFn(modelData) {
 
-     currentModelKey = modelData[0].key;
-     var location = new AR.GeoLocation(parseFloat(modelData[0].latitude), parseFloat(modelData[0].longitude));
+            currentModelKey = modelData[0].key;
+            var location = new AR.GeoLocation(parseFloat(modelData[0].latitude), parseFloat(modelData[0].longitude));
 
             var model = new AR.Model("assets/mCoin.wt3", {
             onLoaded: this.worldLoaded,
             onError: World.onError,
 
-                scale: {
-                    x: 1,
-                    y: 1,
-                    z: 1
-                },
-                rotate: {
-                    x: 90,
-                    y: -80,
-                    z: 90
-                },
-
-                onClick : function() {
-                                   World.reportToJava();
-                                   World.resetModels();
-                                }
+            scale: {
+                x: 1,
+                y: 1,
+                z: 1
+            },
+            rotate: {
+                x: 90,
+                y: -80,
+                z: 90
+            },
+            onClick : function() {
+                               World.reportToJava();
+                               World.resetModels();
+            }
 
             });
 
@@ -98,8 +77,8 @@ var World = {
             } else{
 
             var indicatorImage = new AR.ImageResource("assets/indi.png", {
-                                onError: World.onError
-                            });
+                       onError: World.onError
+            });
 
             var indicatorDrawable = new AR.ImageDrawable(indicatorImage, 0.1, {
                 verticalAnchor: AR.CONST.VERTICAL_ANCHOR.TOP
@@ -108,7 +87,7 @@ var World = {
             indicator = indicatorDrawable;
 
             var rotateAnimation = new AR.PropertyAnimation(model, "rotate.x", 0, 360, 10000);
-                        rotateAnimation.start(-1);
+            rotateAnimation.start(-1);
             this.geoObject.locations = location;
             this.geoObject.drawables.addCamDrawable(model);
             this.geoObject.drawables.addIndicatorDrawable(indicatorDrawable);
@@ -121,24 +100,22 @@ var World = {
     resetModels: function resetModelsFn() {
         if(this.tracker.state === AR.InstantTrackerState.TRACKING){
               this.instantTrackable.drawables.removeCamDrawable(currentModel);
-              } else {
+        } else {
               this.geoObject.drawables.removeCamDrawable(currentModel);
               this.geoObject.drawables.removeIndicatorDrawable(indicator);
               }
-              currentModel = null;
-              indicator = null;
-              currentModelKey = null;
+        currentModel = null;
+        indicator = null;
+        currentModelKey = null;
+    },
 
-          },
-
-     reportToJava: function reportToJavaFn(){
-
-                    var objectSelectedJSON = {
-                        name: "objectClicked",
-                        key: currentModelKey
-                    };
-                    AR.platform.sendJSONObject(objectSelectedJSON);
-             },
+    reportToJava: function reportToJavaFn(){
+        var objectSelectedJSON = {
+            name: "objectClicked",
+            key: currentModelKey
+        };
+        AR.platform.sendJSONObject(objectSelectedJSON);
+    },
 
 
     onError: function onErrorFn(error) {
@@ -147,8 +124,7 @@ var World = {
 
     worldLoaded: function worldLoadedFn() {
            document.getElementById("loadingMessage").style.display = "none";
-        }
-
+    }
 
 };
 

@@ -3,24 +3,25 @@ package com.example.apple.QuestGame.models;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.clustering.ClusterItem;
 
-public class Coin implements ClusterItem{
+public class Coin implements ClusterItem {
     private LatLng position;
     private String title;
     private String snippet;
     private int iconPicture;
     private boolean isCluster = false;
 
-    public Coin(){}
+    public Coin() {
+    }
 
 
-    public Coin(double lat, double lng, String title, String snippet,int iconPicture) {
+    public Coin(double lat, double lng, String title, String snippet, int iconPicture) {
         this.position = new LatLng(lat, lng);
         this.title = title;
         this.snippet = snippet;
         this.iconPicture = iconPicture;
     }
 
-    public Coin(int iconPicture ,LatLng position, String snippet, String title) {
+    public Coin(int iconPicture, LatLng position, String snippet, String title) {
         this.position = position;
         this.title = title;
         this.snippet = snippet;
@@ -66,7 +67,11 @@ public class Coin implements ClusterItem{
         this.snippet = snippet;
     }
 
-    public boolean isCluster() { return isCluster; }
+    public boolean isCluster() {
+        return isCluster;
+    }
 
-    public void setCluster(boolean cluster) { isCluster = cluster; }
+    public void setCluster(boolean cluster) {
+        isCluster = cluster;
+    }
 }

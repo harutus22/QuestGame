@@ -49,11 +49,11 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
         clusterIconGenerator = new IconGenerator(context.getApplicationContext());
         imageView = new ImageView(context.getApplicationContext());
 
-        LayoutInflater li = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        LayoutInflater li = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         View multiProfile = li.inflate(R.layout.multi_drawable, null);
         clusterIconGenerator.setContentView(multiProfile);
         clusterIconGenerator.setBackground(ContextCompat.getDrawable(context.getApplicationContext(), R.drawable.circle_zoom_off));
-        clusterImageView =  multiProfile.findViewById(R.id.image);
+        clusterImageView = multiProfile.findViewById(R.id.image);
         textView = multiProfile.findViewById(R.id.amu_text);
 
 
@@ -99,7 +99,7 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
 
     @Override
     protected boolean shouldRenderAsCluster(Cluster<Coin> cluster) {
-        if(cluster.getSize() <= 4){
+        if (cluster.getSize() <= 4) {
             iconGenerator.setContentView(imageView);
         }
         return cluster.getSize() > 4;
@@ -114,10 +114,17 @@ public class ClusterRenderer extends DefaultClusterRenderer<Coin> {
             @Override
             public void onAnimationEnd(Animator animator) {
             }
-            @Override public void onAnimationStart(Animator animator) {
+
+            @Override
+            public void onAnimationStart(Animator animator) {
             }
-            @Override public void onAnimationCancel(Animator animator) {}
-            @Override public void onAnimationRepeat(Animator animator) {
+
+            @Override
+            public void onAnimationCancel(Animator animator) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animator) {
             }
         });
         ((ObjectAnimator) animator).setRepeatCount(Animation.INFINITE);

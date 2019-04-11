@@ -63,14 +63,14 @@ public class MainFragment extends Fragment {
 
     }
 
-        private void initQuests() {
-            QuestLiveData.selected.observe(this, new Observer<ArrayList<Quest>>() {
-                @Override
-                public void onChanged(@Nullable ArrayList<Quest> quest) {
-                    questViewAdapter.setData(quest);
-                }
-            });
-        }
+    private void initQuests() {
+        QuestLiveData.selected.observe(this, new Observer<ArrayList<Quest>>() {
+            @Override
+            public void onChanged(@Nullable ArrayList<Quest> quest) {
+                questViewAdapter.setData(quest);
+            }
+        });
+    }
 
 
     @Override
@@ -90,8 +90,6 @@ public class MainFragment extends Fragment {
         recyclerView.setAdapter(questViewAdapter);
         recyclerView.setEnabled(false);
     }
-
-
 
 
     @Override

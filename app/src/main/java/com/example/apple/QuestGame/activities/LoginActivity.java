@@ -5,7 +5,6 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 
 
-
 import com.example.apple.QuestGame.R;
 import com.example.apple.QuestGame.fragments.LoginFragment;
 
@@ -23,10 +22,9 @@ public class LoginActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(getFragmentManager().getBackStackEntryCount() == 0) {
+        if (getFragmentManager().getBackStackEntryCount() == 0) {
             super.onBackPressed();
-        }
-        else {
+        } else {
             getFragmentManager().popBackStack();
         }
     }

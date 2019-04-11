@@ -96,7 +96,8 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     private Marker questMarker;
     private boolean check;
 
-    public MapFragment() { }
+    public MapFragment() {
+    }
 
     public static MapFragment newInstance(String param) {
         MapFragment fragment = new MapFragment();
@@ -123,7 +124,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         getLocationPermission();
-        if(locationPermission) {
+        if (locationPermission) {
             mAuth = FirebaseAuth.getInstance();
             mDatabase = FirebaseDatabase.getInstance().getReference();
             initPoints(view);
@@ -194,7 +195,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
             @Override
             public void onChanged(@Nullable ArrayList<Quest> quest1) {
                 quests = quest1;
-                for(Quest quest: quest1) {
+                for (Quest quest : quest1) {
                     String photoPath = Environment.getExternalStorageDirectory() + "/" + quest.getAvatar() + ".png";
                     Bitmap bitmap = BitmapFactory.decodeFile(photoPath);
                     questMarker = mMap.addMarker(new MarkerOptions().position(quest.getCoordinate().get(0)).icon
@@ -214,18 +215,16 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         int night = 21;
         int currentTime = getHour();
 
-        if(currentTime >= morning && currentTime < afternoon){
+        if (currentTime >= morning && currentTime < afternoon) {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_standart));
-        }
-        else if(currentTime >= afternoon && currentTime < night){
+        } else if (currentTime >= afternoon && currentTime < night) {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_retro));
-        }
-        else if (currentTime >= night && currentTime < 24 || currentTime < morning){
+        } else if (currentTime >= night && currentTime < 24 || currentTime < morning) {
             mMap.setMapStyle(MapStyleOptions.loadRawResourceStyle(mContext, R.raw.map_style_night));
         }
     }
 
-    private int getHour(){
+    private int getHour() {
         Calendar calendar = Calendar.getInstance();
         return calendar.get(Calendar.HOUR_OF_DAY);
     }
@@ -412,7 +411,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void getQuests() {
-        if(!quests.isEmpty()){
+        if (!quests.isEmpty()) {
 
         }
     }
@@ -455,7 +454,7 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if(!marker.getTitle().equals("quest")) {
+                if (!marker.getTitle().equals("quest")) {
                     int point = Integer.valueOf(points.getText().toString());
                     mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(point);
                     coins.remove(clusterItem.getTitle());
@@ -488,15 +487,15 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                if(!check) {
-                    if(marker.getTitle().equals("quest")) {
+                if (!check) {
+                    if (marker.getTitle().equals("quest")) {
                         quest = quests.get(Integer.valueOf(marker.getSnippet()));
                         if (!quest.isAccepted()) {
                             quest.setOnButtonClick(onButtonClick);
                             quest.startQuest(getFragmentManager(), mContext, getActivity());
                         }
                     }
-                }else {
+                } else {
                     passQuest();
                 }
                 onClusterClick(marker);
@@ -505,10 +504,10 @@ public class MapFragment extends Fragment implements OnMapReadyCallback {
         });
     }
 
-    private void passQuest(){
-        if(quest != null){
+    private void passQuest() {
+        if (quest != null) {
             quest.passQuest(mMap, getFragmentManager(), this);
-            if(quest.isFinished()){
+            if (quest.isFinished()) {
                 mDatabase.child("users").child(mAuth.getUid()).child("points").setValue(points.getText().toString());
                 questMarker.remove();
                 quests.remove(quest);

@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
             }
             break;
 
-            case R.id.action_settings:{
+            case R.id.action_settings: {
                 SettingsFragment settingsFragment = SettingsFragment.newInstance(name, point);
                 fragmentManager.replace(R.id.placeHolder, settingsFragment);
                 fragmentManager.commit();
@@ -158,7 +158,6 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
         }
         return true;
     }
-
 
 
     private void getUserInfo() {
@@ -387,10 +386,10 @@ public class MainActivity extends AppCompatActivity implements BottomNavigationV
 
     @Override
     public void onBackPressed() {
-            if (getFragmentManager().getBackStackEntryCount() == 0) {
-                super.onBackPressed();
-            } else {
-                getFragmentManager().popBackStack();
-            }
+        if (getFragmentManager().getBackStackEntryCount() == 0) {
+            super.onBackPressed();
+        } else {
+            getFragmentManager().popBackStack();
         }
+    }
 }

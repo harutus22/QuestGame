@@ -11,8 +11,8 @@ import com.google.android.gms.maps.model.Marker;
 public class ClusterInfoViewAdapter implements GoogleMap.InfoWindowAdapter {
     private LayoutInflater mLayoutInflater;
 
-    public ClusterInfoViewAdapter(LayoutInflater layoutInflater){
-         mLayoutInflater = layoutInflater;
+    public ClusterInfoViewAdapter(LayoutInflater layoutInflater) {
+        mLayoutInflater = layoutInflater;
     }
 
     @Override
@@ -25,7 +25,7 @@ public class ClusterInfoViewAdapter implements GoogleMap.InfoWindowAdapter {
         return inflateLayout(marker);
     }
 
-    private View inflateLayout(Marker marker){
+    private View inflateLayout(Marker marker) {
         final View popup = mLayoutInflater.inflate(R.layout.info_window_layout, null);
         ((TextView) popup.findViewById(R.id.title)).setText(marker.getSnippet());
         return popup;

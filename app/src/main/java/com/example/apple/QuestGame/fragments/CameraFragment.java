@@ -31,6 +31,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class CameraFragment extends Fragment implements ArchitectJavaScriptInterfaceListener {
 
@@ -46,7 +47,8 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
     private HashMap<String, Coin> coinsData = new HashMap<>();
     private Location myLocation;
 
-    public CameraFragment() { }
+    public CameraFragment() {
+    }
 
 
     @Override
@@ -57,20 +59,11 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_camera, container, false);
     }
 
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -87,7 +80,7 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
             public void onChanged(@Nullable Location location) {
                 myLocation = location;
                 mArchitectView.setLocation(location.getLatitude(), location.getLongitude(), location.getAccuracy());
-                if(myLocation != null && canCreateModel) {
+                if (myLocation != null && canCreateModel) {
                     canCreateModel = false;
                     createModelAtLocation();
                 }
@@ -104,8 +97,6 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
             }
         });
     }
-
-
 
 
     @Override
@@ -159,18 +150,18 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
         mArchitectView.onLowMemory();
     }
 
-    private void createModelAtLocation(){
+    private void createModelAtLocation() {
         Map.Entry<String, Coin> entry = null;
 
         for (Map.Entry<String, Coin> stringCoinEntry : coinsData.entrySet()) {
             LatLng latLng = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
 
-            if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 50 ) {
+            if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 50) {
                 entry = stringCoinEntry;
                 final double[] coinLocationLatLon = new double[]{entry.getValue().getPosition().latitude, entry.getValue().getPosition().longitude};
                 final String key = entry.getKey();
-                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 25 ) {
-                    if(!isInstantTracking){
+                if (SphericalUtil.computeDistanceBetween(latLng, stringCoinEntry.getValue().getPosition()) < 25) {
+                    if (!isInstantTracking) {
                         final JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
                         final Handler handler = new Handler();
                         handler.postDelayed(new Runnable() {
@@ -182,8 +173,8 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
                         }, 1500);
                     }
 
-                }else {
-                    if(isInstantTracking){
+                } else {
+                    if (isInstantTracking) {
                         changeTrackerState();
                     }
                     JSONArray jsonArray = generateCoinInformation(coinLocationLatLon, key);
@@ -192,7 +183,7 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
                 }
             }
         }
-        if(entry == null){
+        if (entry == null) {
             canCreateModel = true;
         }
     }
@@ -211,7 +202,7 @@ public class CameraFragment extends Fragment implements ArchitectJavaScriptInter
         return coins;
     }
 
-    private void changeTrackerState(){
+    private void changeTrackerState() {
         mArchitectView.callJavascript("World.changeTrackerState()");
         isInstantTracking = !isInstantTracking;
     }

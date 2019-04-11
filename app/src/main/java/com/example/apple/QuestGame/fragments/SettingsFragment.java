@@ -49,7 +49,8 @@ public class SettingsFragment extends Fragment {
     private Button mSignOut, mEdit;
 
 
-    public SettingsFragment() { }
+    public SettingsFragment() {
+    }
 
     public static SettingsFragment newInstance(String username, String points) {
         SettingsFragment fragment = new SettingsFragment();
@@ -94,7 +95,7 @@ public class SettingsFragment extends Fragment {
         super.onDetach();
     }
 
-    private void init(View view){
+    private void init(View view) {
         mUserNameView = view.findViewById(R.id.settings_user_name);
         mPointsView = view.findViewById(R.id.settings_user_points);
         mUserImage = view.findViewById(R.id.settings_user_image);
@@ -102,7 +103,7 @@ public class SettingsFragment extends Fragment {
         mSignOut = view.findViewById(R.id.settings_btn_sign_out);
     }
 
-    private void btnClick(){
+    private void btnClick() {
         mSignOut.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -117,7 +118,7 @@ public class SettingsFragment extends Fragment {
         });
     }
 
-    private void setViews(){
+    private void setViews() {
         mUserNameView.setText(mUsername);
         mPointsView.setText(mPoints);
     }

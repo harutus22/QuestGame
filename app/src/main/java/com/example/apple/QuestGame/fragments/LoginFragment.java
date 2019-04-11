@@ -87,7 +87,8 @@ public class LoginFragment extends Fragment {
     private Activity mActivity;
 
 
-    public LoginFragment() { }
+    public LoginFragment() {
+    }
 
     public static LoginFragment newInstance(String param1, String param2) {
         LoginFragment fragment = new LoginFragment();

@@ -21,11 +21,17 @@ public class PopUpCongrats extends DialogFragment {
     public PopUpCongrats() {
     }
 
-    public TextView getRewardView() { return rewardView; }
+    public TextView getRewardView() {
+        return rewardView;
+    }
 
-    public String getReward() { return reward; }
+    public String getReward() {
+        return reward;
+    }
 
-    public void setReward(String reward) { this.reward = reward; }
+    public void setReward(String reward) {
+        this.reward = reward;
+    }
 
     @Nullable
     @Override

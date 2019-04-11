@@ -25,7 +25,8 @@ public class QuestViewAdapter extends RecyclerView.Adapter<QuestHolder> {
     private OnItemSelectedListener onItemSelectedListener;
     private boolean passed;
 
-    public QuestViewAdapter(){}
+    public QuestViewAdapter() {
+    }
 
     public void setPassed(boolean passed) {
         this.passed = passed;
@@ -38,7 +39,7 @@ public class QuestViewAdapter extends RecyclerView.Adapter<QuestHolder> {
     private QuestHolder.OnItemClickListener onItemClickListener = new QuestHolder.OnItemClickListener() {
         @Override
         public void onItemClick(int adapterPosition) {
-            if(onItemSelectedListener != null){
+            if (onItemSelectedListener != null) {
                 onItemSelectedListener.onItemSelected(data.get(adapterPosition));
             }
         }
@@ -62,6 +63,7 @@ public class QuestViewAdapter extends RecyclerView.Adapter<QuestHolder> {
         questHolder.getReward().setText("Reward: " + String.valueOf(quest.getReward()));
         questHolder.getQuestImage().setImageBitmap(getFile(quest.getAvatar()));
     }
+
     public List<Quest> getData() {
         return data;
     }
@@ -74,6 +76,7 @@ public class QuestViewAdapter extends RecyclerView.Adapter<QuestHolder> {
     public void setData(List<Quest> data) {
         this.data = data;
     }
+
     public void addData(Quest quest) {
         data.add(quest);
         notifyItemInserted(data.size() - 1);
@@ -83,9 +86,9 @@ public class QuestViewAdapter extends RecyclerView.Adapter<QuestHolder> {
         void onItemSelected(Quest quest);
     }
 
-    private Bitmap getFile(String imageName){
+    private Bitmap getFile(String imageName) {
         String photoPath = Environment.getExternalStorageDirectory() + "/" + imageName + ".png";
-         BitmapFactory.decodeFile(photoPath);
+        BitmapFactory.decodeFile(photoPath);
         return BitmapFactory.decodeFile(photoPath);
     }
 
